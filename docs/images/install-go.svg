@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="840" viewBox="0 0 1200 840" role="img" aria-labelledby="title desc">
+<title id="title">安装 Go：安装一次，之后直接用</title><desc id="desc">按系统选择一种安装方法。安装后，关闭旧命令行，再重新打开。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="840" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">安装 Go：安装一次，之后直接用</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">按系统选择一种安装方法。安装后，关闭旧命令行，再重新打开。</text>
+<text x="40" y="816" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="1120" height="190" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">Windows：在 PowerShell 执行</text>
+<rect x="63" y="245" width="1074" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="281" font-family="SFMono-Regular,Consolas,monospace" font-size="25" font-weight="550" fill="#9bf1c2" data-max-width="1038">winget install --id GoLang.Go --exact --source winget</text>
+<text x="66" y="335" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">没有 winget？打开 go.dev/dl/，下载 Windows 安装包并安装。</text>
+<rect x="40" y="378" width="1120" height="255" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="398" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="425" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="114" y="426" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">Mac：选择一种方式</text>
+<text x="66" y="478" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">已有 Homebrew</text>
+<rect x="63" y="500" width="475" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="536" font-family="SFMono-Regular,Consolas,monospace" font-size="25" font-weight="550" fill="#9bf1c2" data-max-width="439">brew install go</text>
+<text x="592" y="478" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">没有 Homebrew</text>
+<text x="592" y="520" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">打开 go.dev/dl/，下载 Mac 安装包。</text>
+<text x="592" y="556" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">Apple 芯片选 arm64，Intel 选 amd64。</text>
+<rect x="40" y="660" width="1120" height="115" rx="14" fill="#102d23"/>
+<text x="64" y="700" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#fff">重新打开命令行，检查安装结果</text>
+<text x="65" y="746" font-family="SFMono-Regular,Consolas,monospace" font-size="27" font-weight="600" fill="#9bf1c2">go version</text>
+<text x="388" y="746" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#d2eade">看到 Go 1.26.8 或更高版本，就可以编译。</text>
+</svg>

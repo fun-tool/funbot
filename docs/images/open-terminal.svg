@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">打开命令行：选自己电脑的一边</title><desc id="desc">先进入源码文件夹。程序编译并移动后，再用同样的方法进入账号组文件夹。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="850" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">打开命令行：选自己电脑的一边</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">先进入源码文件夹。程序编译并移动后，再用同样的方法进入账号组文件夹。</text>
+<text x="40" y="826" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="530" height="495" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">Windows：文件夹地址栏</text>
+<rect x="62" y="240" width="486" height="64" rx="8" fill="#f1f6f3" stroke="#20764f"/>
+<text x="81" y="280" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" font-weight="650" fill="#183f31">powershell</text>
+<text x="67" y="333" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">在顶部地址栏输入，再按回车。</text>
+<text x="67" y="373" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#9b5b15">不是右侧的“搜索”框。</text>
+<path d="M300 398 L300 435" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="63" y="460" width="484" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="496" font-family="SFMono-Regular,Consolas,monospace" font-size="24" font-weight="550" fill="#9bf1c2" data-max-width="448">PS … &gt;</text>
+<text x="66" y="565" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">出现 PowerShell 窗口后，</text>
+<text x="66" y="601" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">在这里输入下一步命令。</text>
+<rect x="610" y="165" width="550" height="495" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="684" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">Mac：终端 + 拖文件夹</text>
+<rect x="633" y="240" width="504" height="64" rx="8" fill="#f1f6f3" stroke="#cbded1"/>
+<text x="653" y="281" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="600" fill="#183f31">Command + 空格 → 搜索“终端”</text>
+<rect x="633" y="331" width="504" height="64" rx="12" fill="#102d23"/>
+<text x="651" y="367" font-family="SFMono-Regular,Consolas,monospace" font-size="27" font-weight="550" fill="#9bf1c2" data-max-width="468">cd </text>
+<text x="650" y="431" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">先输入 cd，再按一次空格。</text>
+<path d="M643 477 V462 H708 L723 477 H913 V547 H643Z" fill="#f8e8b4" stroke="#d7bd71" stroke-width="2"/>
+<text x="663" y="517" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">源码文件夹</text>
+<path d="M931 505 L1087 505" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="951" y="478" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="20" font-weight="500" fill="#183f31">拖进终端</text>
+<text x="646" y="600" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">拖入文件夹后按回车，就进入了。</text>
+<rect x="40" y="704" width="1120" height="54" rx="14" fill="#dceddf"/>
+<text x="62" y="739" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600" fill="#183f31">命令要在正确的文件夹执行：编译用源码文件夹，导入和启动用账号组文件夹。</text>
+</svg>

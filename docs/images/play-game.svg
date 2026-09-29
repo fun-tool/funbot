@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="920" viewBox="0 0 1200 920" role="img" aria-labelledby="title desc">
+<title id="title">开始打局：选账号、选场数，再看执行结果</title><desc id="desc">场数是每个号再打最多多少场；仍受当天 12 场上限限制。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="920" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">开始打局：选账号、选场数，再看执行结果</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">场数是每个号再打最多多少场；仍受当天 12 场上限限制。</text>
+<text x="40" y="896" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="1120" height="205" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">“跑”页面 → 勾选账号 → 选择场数与入场方式</text>
+<rect x="65" y="250" width="268" height="67" rx="14" fill="#dceddf"/>
+<text x="88" y="293" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">☑ 队员 1  ☑ 队员 2</text>
+<text x="366" y="293" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="600" fill="#183f31">场数： 1 / 6 / 12</text>
+<rect x="795" y="259" width="315" height="48" rx="9" fill="#145d41"/>
+<text x="952.5" y="291" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">开跑</text>
+<rect x="40" y="400" width="530" height="210" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="420" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="447" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="114" y="448" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">能打就打</text>
+<text x="65" y="494" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">能入场的先打。</text>
+<text x="65" y="530" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">选 1 场：处理一批后结束，</text>
+<text x="65" y="566" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">不等待占位账号补打。</text>
+<rect x="610" y="400" width="550" height="210" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="420" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="447" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">3</text>
+<text x="684" y="448" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">等齐再打</text>
+<text x="635" y="494" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">等待整批账号模拟通过后提交。</text>
+<text x="635" y="530" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">可能需要等待其他玩家填满擂台。</text>
+<text x="635" y="566" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">不代表全部进入同一个局号。</text>
+<rect x="40" y="638" width="1120" height="175" rx="14" fill="#102d23"/>
+<text x="66" y="682" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="27" font-weight="700" fill="#fff">执行日志：看“确认入场”的实际数量</text>
+<text x="66" y="729" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#bdebd0">示例：确认 2/3 个号入场 → 本笔实际进了 2 个，不能当成 3 个。</text>
+<text x="66" y="775" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#bdebd0">等待或失败时，先看日志原因；交易确认后页面会更新。</text>
+<text x="43" y="866" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="650" fill="#183f31">已结算回款足够时直接入场；否则用钱包支付，子号不足由主号补差额。</text>
+</svg>

@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>擂台机器人</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <div class="tabs">
+          <button class="tab on" data-tab="play">跑</button>
+          <button class="tab" data-tab="setup">设置</button>
+        </div>
+        <span id="systemIdentity" class="chip">本地系统</span>
+        <span id="net" class="chip">—</span>
+        <span id="lockState" class="chip">锁着</span>
+        <span id="block" class="chip">—</span>
+        <span id="busy" class="chip warn" hidden>—</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="workspace-content">
+        <div id="tab-play">
+          <div id="playBlocked" class="big-hint" hidden></div>
+
+          <div id="playBody" hidden>
+            <div class="panel hero">
+              <div class="hero-t">一键跑一天</div>
+              <div class="row">
+                <div class="fld">
+                  <label>执行次数 · 每号当天最多 12 场</label>
+                  <div class="seg" id="segRounds">
+                    <button data-v="1">1</button>
+                    <button data-v="6">6</button>
+                    <button data-v="12" class="on">12</button>
+                  </div>
+                </div>
+                <div class="fld grow">
+                  <label class="spacer">&nbsp;</label>
+                  <div class="ops" style="margin: 0">
+                    <button id="btnRun" class="go">开跑</button>
+                    <button id="btnReapAll">领取收益并归集</button>
+                    <button id="btnSweepGas">收 gas 币</button>
+                    <button id="btnStop" class="cut" hidden>停止</button>
+                  </div>
+                </div>
+              </div>
+              <p class="dim">
+                页面每 24 个账号一组，支持跨组选中；Gas 允许就合并处理。选 1 且「能打就打」时不等待补打。
+              </p>
+              <label class="entry-mode">入场方式 <select id="entryMode"><option value="flexible">能打就打 · 可执行账号先入场</option><option value="together">等齐再打 · 全部就绪后同笔提交</option></select></label>
+              <div class="picked">
+                <span id="pickInfo">全部 —</span>
+                <button class="lnk" data-pick="all">全选</button>
+                <button class="lnk" data-pick="none">全不选</button>
+                <button class="lnk" data-pick="idle">只选空闲的</button>
+                <button class="lnk" data-pick="ready">只选有钱可收的</button>
+                <span class="sep"></span>
+                <span>选前</span>
+                <input type="number" id="pickN" value="24" min="1" max="500" />
+                <button class="lnk" data-pick="firstN">个</button>
+              </div>
+
+              <div class="picked">
+                <span>按名册序号选</span
+                ><input
+                  type="number"
+                  id="pickFrom"
+                  value="5"
+                  min="1"
+                  aria-label="起始名册序号"
+                />
+                <span>至</span
+                ><input
+                  type="number"
+                  id="pickTo"
+                  value="15"
+                  min="1"
+                  aria-label="结束名册序号"
+                />
+                <button class="lnk" id="btnPickRange">选择范围</button>
+                <span class="selection-help"
+                  >支持 Shift 连选，或沿左侧勾选框向下拖动</span
+                >
+              </div>
+              <div class="row" id="fundBox">
+                <div class="fld grow">
+                  <label for="fundAmount">给每个勾选队员转入 fLGNS</label>
+                  <input
+                    id="fundAmount"
+                    type="text"
+                    inputmode="decimal"
+                    value="100"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="fld">
+                  <label class="spacer">&nbsp;</label
+                  ><button id="btnFund">批量转入</button>
+                </div>
+              </div>
+              <p class="dim">
+                转入金额会加到原余额上，主号自动跳过。打局只补入场费差额，不领取收益、不归集，剩余余额留在各钱包。
+              </p>
+              <p class="dim">
+                勾选几个地址后点「领取收益并归集」：领取甲子俸、师徒收益、擂台回款，再把全部可用
+                fLGNS 转回主号。全选则处理全队。
+              </p>
+
+              <div id="runBar" hidden>
+                <div class="bar-track">
+                  <div class="bar-fill" id="barFill"></div>
+                </div>
+                <div class="bar-text" id="barText">—</div>
+              </div>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="k">主号余额</div>
+                <div class="v jade" id="mBal">—</div>
+              </div>
+              <div class="stat">
+                <div class="k">主号 Gas 余额</div>
+                <div class="v" id="mGas">—</div>
+              </div>
+              <div class="stat">
+                <div class="k">当前局</div>
+                <div class="v" id="round">—</div>
+              </div>
+              <div class="stat">
+                <div class="k">这局已坐</div>
+                <div class="v" id="seats">—</div>
+              </div>
+              <div class="stat">
+                <div class="k">全队可收</div>
+                <div class="v jade" id="sumTotal">—</div>
+              </div>
+            </div>
+
+            <p class="dim" id="balanceStatus">等待读取链上余额</p>
+            <p class="dim">擂台分为已结算回款和未结算押金。已结算回款达到入场费时可直接入场；否则从钱包支付整笔入场费，队员钱包不足时由主号补差额。</p>
+            <details open>
+              <summary>名册明细 · 也可以一个一个点</summary>
+              <div id="masterStandalone" class="panel" hidden></div>
+              <div class="wrap">
+                <table class="roster-table">
+                  <thead>
+                    <tr>
+                      <th class="pk">
+                        <input
+                          type="checkbox"
+                          id="ckAll"
+                          title="全选 / 全不选"
+                        />
+                      </th>
+                      <th>序号 / 账号</th>
+                      <th>状态</th>
+                      <th>场次</th>
+                      <th title="累计已裁决的盟主次数">盟主次数</th>
+                      <th>钱包</th>
+                      <th>擂台</th>
+                      <th>师承</th>
+                      <th>甲子俸</th>
+                      <th>可收</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rows"></tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div id="tab-setup" hidden>
+          <section id="secImportHelp">
+            <h2>在终端导入账号</h2>
+            <p class="dim">
+              助记词和私钥只在终端输入，内容不回显。网页不接收助记词、私钥或秘密文件。
+            </p>
+            <section>
+              <h2>密钥保存在哪里</h2>
+              <p class="dim">
+                每套程序使用自己文件夹里的 .data 目录；源码运行使用当前项目里的 .data。程序会自动创建，使用 -keys 时以指定路径为准。
+              </p>
+              <label>macOS 默认位置</label>
+              <div class="cmd" id="macVault"></div>
+              <label>Windows 默认位置</label>
+              <div class="cmd" id="windowsVault"></div>
+              <details>
+                <summary>查看当前电脑实际保存位置</summary>
+                <p id="vaultPath" class="mono"></p>
+                <p class="dim">
+                  此路径由当前运行的程序读取。使用了 -keys 参数时，以这里为准。
+                </p>
+              </details>
+              <p class="dim">
+                助记词和私钥仅以密文保存。退出程序后备份整个 .data，并妥善保存密钥文件密码。
+              </p>
+            </section>
+            <section id="pendingBox" hidden>
+              <h2>上一笔交易待确认</h2>
+              <p id="pendingText" class="mono"></p>
+              <p class="dim">
+                已暂停新交易。检查会查询回执；若仍未上链，只重发原交易，不重复签名。
+              </p>
+              <button id="btnRecoverTransaction">检查 / 重发原交易</button>
+            </section>
+            <details id="importHelp" open>
+              <summary>从打开命令行到启动、导入账号</summary>
+              <p class="dim">
+                按 README 执行 go build .，把生成的 funbot 放进账号组文件夹。以下命令都在账号组文件夹运行。
+              </p>
+              <div class="guide-tabs" role="group" aria-label="选择操作系统">
+                <button
+                  id="guideMacButton"
+                  type="button"
+                  class="on"
+                  aria-pressed="true"
+                >
+                  macOS
+                </button>
+                <button
+                  id="guideWindowsButton"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  Windows · PowerShell
+                </button>
+              </div>
+              <section id="guideMac">
+                <h3>1. 打开终端并进入程序文件夹</h3>
+                <p>
+                  按 Command + 空格，搜索「终端」并打开。在终端输入
+                  <code>cd </code>（后面留一个空格），从 Finder
+                  把账号组文件夹拖进终端，然后按回车。
+                </p>
+                <p class="dim">
+                  拖文件夹，不是拖程序文件；路径中的空格会自动处理。
+                </p>
+                <h3>2. 启动程序</h3>
+                <div class="cmd" id="macStart"></div>
+                <p class="dim">
+                  保持终端开着，程序会打开本地网页。如果已经打开本页，无需重复启动；未自动打开时，复制终端显示的完整链接到浏览器。
+                </p>
+                <h3>3. 再开一个终端窗口，导入账号</h3>
+                <p>
+                  按 Command + N 新建终端窗口，再按第 1
+                  步进入同一个程序文件夹。首次导入设置密钥文件密码，后续使用同一个密码。
+                </p>
+                <label>导入主号 · 只需一个</label>
+                <div class="cmd" id="macMaster"></div>
+                <label>连续导入队员 · 支持多条助记词或私钥</label>
+                <div class="cmd" id="macMember"></div>
+              </section>
+              <section id="guideWindows" hidden>
+                <h3>1. 在程序文件夹打开 PowerShell</h3>
+                <p>
+                  在文件资源管理器中打开存放 funbot 的账号组文件夹。点击上方地址栏，输入
+                  <code>powershell</code>
+                  并按回车，打开的命令行就位于这个文件夹。
+                </p>
+                <h3>2. 启动程序</h3>
+                <div class="cmd" id="windowsStart"></div>
+                <p class="dim">
+                  保留命令前的
+                  .\，并保持窗口开着。已打开本页时无需重复启动；未自动打开时，复制终端显示的完整链接到浏览器。
+                </p>
+                <h3>3. 再开一个 PowerShell 窗口，导入账号</h3>
+                <p>
+                  在同一个程序文件夹的地址栏再次输入
+                  <code>powershell</code>
+                  并回车。首次导入设置密钥文件密码，后续使用同一个密码。
+                </p>
+                <label>导入主号 · 只需一个</label>
+                <div class="cmd" id="windowsMaster"></div>
+                <label>连续导入队员 · 支持多条助记词或私钥</label>
+                <div class="cmd" id="windowsMember"></div>
+              </section>
+              <h3>4. 按提示输入，再回网页解锁</h3>
+              <ol>
+                <li>
+                  在终端粘贴助记词或私钥，再按回车。输入内容不回显；提交后显示单词数或私钥位数。
+                </li>
+                <li>核对程序显示的钱包地址，输入 y 确认，再填写备注。</li>
+                <li>
+                  连续导入队员时，每次输入一条助记词或私钥；空行回车结束。
+                </li>
+                <li>
+                  回到网页，点「重新读取账号」并解锁。需要同一助记词的更多钱包时，在下方派生。
+                </li>
+              </ol>
+              <p class="dim">
+                下次只需进入程序文件夹、执行第 2
+                步启动，再到网页解锁。退出程序用启动窗口里的 Ctrl + C。
+              </p>
+              <details>
+                <summary>
+                  当前电脑的导入命令 · 自定义目录或程序名称时使用
+                </summary>
+                <p class="dim">
+                  这些命令由正在运行的程序自动生成，每个人看到的路径都不同；它们会使用当前密钥文件。
+                </p>
+                <label>导入主号</label>
+                <div class="cmd" id="cmdMaster"></div>
+                <label>连续导入队员</label>
+                <div class="cmd" id="cmdMember"></div>
+              </details>
+              <label>终端显示示例 · 不会显示实际内容</label>
+              <div class="cmd">
+                助记词或私钥（直接回车结束）: [输入不回显] 已输入助记词：12
+                个单词（内容不显示） 或：已输入私钥：64 位（不含
+                0x，内容不显示） → 地址 0x… 对吗？(y/n): y 备注: 钱包 A
+              </div>
+            </details>
+            <div class="ops">
+              <button id="btnReloadVault">终端导入完成 → 重新读取账号</button>
+            </div>
+          </section>
+
+          <section id="secUnlock" hidden>
+            <h2>解锁后恢复上次配置</h2>
+            <p class="dim">
+              合约、参赛开关、账号选择和局数已保存在本机。无需重新导号、部署或委托。
+            </p>
+            <input
+              id="pw"
+              type="password"
+              placeholder="密码"
+              autocomplete="off"
+              spellcheck="false"
+              data-1p-ignore
+              data-lpignore="true"
+            />
+            <div class="ops">
+              <button id="btnUnlock" class="go">解锁</button>
+            </div>
+          </section>
+
+          <div id="setupBody" hidden>
+            <section id="secDerive">
+              <h2>从已保存的助记词派生钱包</h2>
+              <p class="dim">
+                选择来源和序号，由本地程序读取加密文件、派生并保存。助记词不会传到网页；私钥账号不能派生。
+              </p>
+              <p id="noMnemonic" class="dim" hidden>
+                还没有助记词来源，请先在终端导入一条助记词。
+              </p>
+              <div id="deriveBody" hidden>
+                <label for="deriveSource"
+                  >助记词组 · 用备注和已导入地址识别</label
+                ><select id="deriveSource"></select>
+                <div class="row">
+                  <div class="fld">
+                    <label for="deriveStart">起始序号</label
+                    ><input
+                      id="deriveStart"
+                      type="number"
+                      min="0"
+                      max="2147483647"
+                      value="1"
+                    />
+                  </div>
+                  <div class="fld">
+                    <label for="deriveCount">派生数量</label
+                    ><input
+                      id="deriveCount"
+                      type="number"
+                      min="1"
+                      max="500"
+                      value="1"
+                    />
+                  </div>
+                </div>
+                <label for="deriveLabel">新钱包备注前缀</label
+                ><input id="deriveLabel" placeholder="例如：钱包 A" />
+                <label for="derivePassword"
+                  >密钥文件密码 · 用于本机解密并重新加密保存</label
+                >
+                <input
+                  id="derivePassword"
+                  type="password"
+                  autocomplete="off"
+                  placeholder="密钥文件密码"
+                  data-1p-ignore
+                  data-lpignore="true"
+                />
+                <p class="dim">
+                  路径 m/44'/60'/0'/0/i。比如已经导入第 0 个钱包，从 1 开始派生
+                  5 个，就是序号
+                  1–5；重复地址会跳过。新增钱包还需委托、加入名册和授权。
+                </p>
+                <div class="ops">
+                  <button id="btnDeriveSaved" class="go">派生并加密保存</button>
+                </div>
+                <details>
+                  <summary>这组助记词已导入的钱包</summary>
+                  <div class="wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>备注</th>
+                          <th>地址 / 路径</th>
+                        </tr>
+                      </thead>
+                      <tbody id="derivedWallets"></tbody>
+                    </table>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section>
+              <h2>合约</h2>
+              <input
+                id="inContract"
+                class="mono"
+                placeholder="0x…"
+                spellcheck="false"
+              />
+              <div class="ops">
+                <button id="btnAttach" class="go">载入</button>
+                <button id="btnLock">上锁</button>
+              </div>
+              <p class="dim">载入或部署成功后会自动保存，下次解锁自动连接。</p>
+              <div id="deployBox">
+                <label>新部署一个 · 师父地址 · 留空用已拜师的主号</label>
+                <input
+                  id="inShifu"
+                  class="mono"
+                  placeholder="0x…"
+                  spellcheck="false"
+                />
+                <div class="ops"><button id="btnDeploy">部署</button></div>
+              </div>
+              <div class="addrs" id="cfgBox" hidden></div>
+            </section>
+
+            <section>
+              <h2>账号设置</h2>
+              <p class="dim">
+                主号在最前，其余按本地添加顺序显示。改名会重新加密保存到密钥文件。
+              </p>
+              <div class="picked" id="delegateSelection">
+                <span id="delegateCount">已选 0 个</span>
+                <button class="lnk" id="delegateAll">全选</button>
+                <button class="lnk" id="delegateNone">清空</button>
+                <span>账号序号</span>
+                <input type="number" id="delegateFrom" value="1" min="1" aria-label="起始账号序号" />
+                <span>至</span>
+                <input type="number" id="delegateTo" value="40" min="1" aria-label="结束账号序号" />
+                <button class="lnk" id="delegateRange">选择范围</button>
+              </div>
+              <p class="dim">在下方勾选账号，或按序号选择范围，再点「① 委托选中账号」或「② 选中账号加入名册」。序号包含主号，与助记词派生序号不同。</p>
+              <button id="btnMentors" class="lnk">刷新师父信息</button>
+              <div class="wrap" id="seatWrap" hidden>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>序号 / 账号</th>
+                      <th>身份</th>
+                      <th>在名册</th>
+                      <th>已委托</th>
+                      <th>链上师父</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="seatRows"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section>
+              <h2>参赛设置</h2>
+              <label class="chk"
+                ><input type="checkbox" id="cbMasterPlays" checked />
+                主号参加比赛</label
+              >
+              <p class="dim">
+                关闭后，主号只付
+                gas、补币和收款。开启后需将主号加入名册；已在名册的号无需重复加入。
+              </p>
+              <span id="settingsStatus" class="dim">设置自动保存到本机</span>
+            </section>
+
+            <section id="secPrep" hidden>
+              <h2>准备 · 每批号做一次</h2>
+              <p class="dim">委托只处理你选中的账号；主号若尚未委托，会自动一并处理。已委托成功的账号会跳过。加入名册也使用上方勾选的账号；主号只有被勾选且开启参赛时才加入。拜师授权也只处理上方选中的名册账号。</p>
+              <div class="ops">
+                <button id="btnDelegate" class="go">① 委托选中账号</button>
+                <button id="btnDelegateAll">委托全部账号</button>
+                <button id="btnRevokeDelegate">取消选中账号委托</button>
+                <button id="btnRoster">② 选中账号加入名册</button>
+                <button id="btnRosterAll">全部账号加入名册</button>
+                <button id="btnPrepare">③ 选中账号拜师 + 授权</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+      <aside class="console" aria-label="执行日志">
+        <div class="console-head">
+          <span class="console-dot"></span>
+          <h2>执行日志</h2>
+          <span class="console-tag">LIVE CONSOLE</span>
+        </div>
+        <div class="console-status">
+          <span>&gt;_</span><span id="consoleStatus">等待连接本地程序…</span>
+        </div>
+        <div class="console-tools">
+          <label
+            ><input id="logFollow" type="checkbox" checked /> 跟随最新</label
+          ><button id="btnLogPause" type="button">暂停显示</button>
+        </div>
+        <div id="log" role="log" aria-label="执行日志内容"></div>
+        <div class="console-foot">
+          <span id="logCount">0 条记录</span><span>LOCAL SESSION</span>
+        </div>
+      </aside>
+    </main>
+    <dialog id="passwordDialog">
+      <form method="dialog">
+        <label id="passwordPrompt" for="deletePassword"
+          >输入密钥文件密码以确认删除</label
+        >
+        <input id="deletePassword" type="password" autocomplete="off" />
+        <div class="ops">
+          <button value="cancel">取消</button
+          ><button id="passwordConfirm" value="confirm">确认删除</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="app.js"></script>
+  </body>
+</html>

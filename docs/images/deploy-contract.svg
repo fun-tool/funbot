@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">部署或载入：为这个主号连接自己的合约</title><desc id="desc">先给主号准备本链 Gas 币。fLGNS 用于游戏入场，不能代替 Gas。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="850" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">部署或载入：为这个主号连接自己的合约</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">先给主号准备本链 Gas 币。fLGNS 用于游戏入场，不能代替 Gas。</text>
+<text x="40" y="826" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="530" height="460" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">首次使用 → 部署</text>
+<text x="65" y="255" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">设置 → 合约 → 新部署一个</text>
+<text x="65" y="305" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">师父地址</text>
+<rect x="63" y="325" width="484" height="59" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="80" y="363" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#60796c">填写符合游戏要求的师父地址</text>
+<text x="65" y="425" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">留空使用主号，主号须有师父资格。</text>
+<rect x="63" y="450" width="484" height="48" rx="9" fill="#145d41"/>
+<text x="305.0" y="482" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">部署</text>
+<path d="M300 510 L300 542" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="65" y="587" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600" fill="#183f31">核对确认提示 → 等日志显示部署成功</text>
+<rect x="610" y="165" width="550" height="460" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="684" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">已有个人合约 → 载入</text>
+<text x="635" y="255" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">设置 → 合约</text>
+<text x="635" y="305" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">这个主号对应的 Squad 地址</text>
+<rect x="633" y="325" width="504" height="59" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="650" y="363" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#60796c">粘贴已有的个人合约地址</text>
+<text x="635" y="425" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">这里不是游戏 Arena 或代币地址。</text>
+<rect x="633" y="450" width="504" height="48" rx="9" fill="#145d41"/>
+<text x="885.0" y="482" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">载入</text>
+<path d="M883 510 L883 542" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="635" y="587" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600" fill="#183f31">等日志显示已连接 → 核对合约地址</text>
+<rect x="40" y="650" width="1120" height="105" rx="14" fill="#fff0ce"/>
+<text x="65" y="690" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="650" fill="#183f31">拜师关系绑定后不能更改，提交前仔细核对师父地址。</text>
+<text x="65" y="728" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">部署或载入成功后地址会自动保存，下次解锁自动连接。</text>
+</svg>

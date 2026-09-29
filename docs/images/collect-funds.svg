@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">领收益与归集：选哪些账号，就收哪些账号</title><desc id="desc">打局不会自动归集。需要收回 fLGNS 时，手动选择并操作。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="850" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">领收益与归集：选哪些账号，就收哪些账号</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">打局不会自动归集。需要收回 fLGNS 时，手动选择并操作。</text>
+<text x="40" y="826" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="1120" height="160" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">勾选要收款的账号</text>
+<text x="65" y="279" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="27" font-weight="650" fill="#183f31">☑ 队员 1     ☑ 队员 2     ☐ 队员 3</text>
+<path d="M600 338 L600 378" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="295" y="399" width="610" height="48" rx="9" fill="#145d41"/>
+<text x="600.0" y="431" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">领取收益并归集</text>
+<rect x="40" y="490" width="350" height="110" rx="14" fill="#fff" stroke="#cbded1"/>
+<text x="65" y="534" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" font-weight="700" fill="#183f31">甲子俸</text>
+<text x="65" y="574" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#60796c">可领取部分</text>
+<rect x="425" y="490" width="350" height="110" rx="14" fill="#fff" stroke="#cbded1"/>
+<text x="450" y="534" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" font-weight="700" fill="#183f31">师徒收益</text>
+<text x="450" y="574" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#60796c">可领取部分</text>
+<rect x="810" y="490" width="350" height="110" rx="14" fill="#fff" stroke="#cbded1"/>
+<text x="835" y="534" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" font-weight="700" fill="#183f31">擂台回款</text>
+<text x="835" y="574" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#60796c">可领取部分</text>
+<path d="M215 611 L580 659" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M600 611 L600 659" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M985 611 L620 659" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="295" y="677" width="610" height="65" rx="14" fill="#dceddf"/>
+<text x="323" y="719" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">领取后，把可用 fLGNS 全部转给主号</text>
+<text x="43" y="791" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">未结算押金不能直接收回。“收 gas 币”是另一项操作，请单独核对。</text>
+</svg>

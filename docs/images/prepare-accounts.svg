@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+<title id="title">准备账号：先勾选，再按顺序完成三步</title><desc id="desc">导入和派生只是保存钱包。第一次参赛的账号，还需要完成链上准备。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="900" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">准备账号：先勾选，再按顺序完成三步</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">导入和派生只是保存钱包。第一次参赛的账号，还需要完成链上准备。</text>
+<text x="40" y="876" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="1120" height="235" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">设置 → 账号设置 → 勾选要使用的账号</text>
+<rect x="64" y="244" width="1072" height="57" rx="14" fill="#dceddf"/>
+<text x="85" y="281" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="600" fill="#183f31">☑  主号（参赛时勾选）      ☑  队员 1      ☑  队员 2      ☐  其他账号</text>
+<text x="65" y="346" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="500" fill="#183f31">可选本组、跨组选中，也可用序号范围选择，例如 5 到 15。</text>
+<rect x="40" y="455" width="350" height="245" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="475" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="502" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="114" y="503" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">委托选中账号</text>
+<text x="65" y="565" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">完成 7702 委托</text>
+<text x="65" y="610" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">Gas 由主号支付</text>
+<rect x="425" y="455" width="350" height="245" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="447" y="475" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="466" y="502" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">3</text>
+<text x="499" y="503" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">选中账号加入名册</text>
+<text x="450" y="565" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">加入参赛名单</text>
+<text x="450" y="610" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">核对入册状态</text>
+<rect x="810" y="455" width="350" height="245" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="832" y="475" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="851" y="502" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">4</text>
+<text x="884" y="503" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">拜师 + 授权</text>
+<text x="835" y="565" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">处理选中的名册账号</text>
+<text x="835" y="610" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">完成游戏准备</text>
+<path d="M392 576 L418 576" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M777 576 L803 576" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="40" y="729" width="1120" height="54" rx="14" fill="#dceddf"/>
+<text x="62" y="764" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600" fill="#183f31">每一步都看执行日志：确认成功后，再点击下一步；新增账号也按这个顺序准备。</text>
+<text x="43" y="824" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">主号参赛：先开启“主号参加比赛”，入册时勾选主号。主号未委托会自动一并处理。</text>
+</svg>

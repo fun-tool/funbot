@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000" viewBox="0 0 1200 1000" role="img" aria-labelledby="title desc">
+<title id="title">导入钱包：主号先导入，子号按来源选择</title><desc id="desc">在账号组文件夹打开命令行。Windows 用 .\funbot，Mac 用 ./funbot。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="1000" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">导入钱包：主号先导入，子号按来源选择</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">在账号组文件夹打开命令行。Windows 用 .\funbot，Mac 用 ./funbot。</text>
+<text x="40" y="976" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="530" height="355" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">先导入主号</text>
+<text x="65" y="249" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="19" font-weight="500" fill="#60796c">Windows</text>
+<rect x="63" y="261" width="484" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="297" font-family="SFMono-Regular,Consolas,monospace" font-size="24" font-weight="550" fill="#9bf1c2" data-max-width="448">.\funbot -add master</text>
+<text x="65" y="369" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="19" font-weight="500" fill="#60796c">Mac</text>
+<rect x="63" y="381" width="484" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="417" font-family="SFMono-Regular,Consolas,monospace" font-size="24" font-weight="550" fill="#9bf1c2" data-max-width="448">./funbot -add master</text>
+<text x="65" y="490" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">一个账号组只需要一个主号。</text>
+<rect x="610" y="165" width="550" height="355" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="684" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">按提示输入并核对</text>
+<text x="636" y="253" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">设置密钥文件密码（至少 8 位）</text>
+<text x="636" y="305" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">输入助记词或私钥</text>
+<text x="636" y="357" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">核对钱包地址 → 正确才输入 y</text>
+<text x="636" y="409" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">填写备注 → 看到“已加入”</text>
+<rect x="40" y="542" width="1120" height="70" rx="14" fill="#fff0ce"/>
+<text x="65" y="586" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="600" fill="#183f31">输入密码、助记词、私钥时不显示文字或星号。输入完成按回车即可。</text>
+<rect x="40" y="636" width="530" height="245" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="656" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="683" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">3</text>
+<text x="114" y="684" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">子号与主号：同一组助记词</text>
+<text x="65" y="740" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">无需重复导入。</text>
+<text x="65" y="776" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">启动并解锁 → 页面选择这组助记词</text>
+<text x="65" y="812" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#183f31">从序号 1 开始派生子号。</text>
+<rect x="610" y="636" width="550" height="245" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="656" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="683" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">4</text>
+<text x="684" y="684" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">子号来自另一组助记词 / 私钥</text>
+<text x="635" y="725" font-family="SFMono-Regular,Consolas,monospace" font-size="23" font-weight="500" fill="#183f31" data-max-width="498">Windows   .\funbot -add member</text>
+<text x="635" y="773" font-family="SFMono-Regular,Consolas,monospace" font-size="23" font-weight="500" fill="#183f31" data-max-width="498">Mac       ./funbot -add member</text>
+<text x="635" y="831" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">用原密钥密码；全部导完空行回车结束。</text>
+<text x="41" y="932" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">助记词可以派生多个地址；单个私钥只能导入一个地址，不能派生。</text>
+</svg>

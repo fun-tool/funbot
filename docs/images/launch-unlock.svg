@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+<title id="title">启动与解锁：命令行和网页都要保留</title><desc id="desc">在账号组文件夹启动。以后每天只需启动、解锁，不用重新导入或部署。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="800" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">启动与解锁：命令行和网页都要保留</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">在账号组文件夹启动。以后每天只需启动、解锁，不用重新导入或部署。</text>
+<text x="40" y="776" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="530" height="400" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">在账号组文件夹启动</text>
+<text x="66" y="258" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="21" font-weight="500" fill="#183f31">Windows</text>
+<rect x="63" y="278" width="484" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="314" font-family="SFMono-Regular,Consolas,monospace" font-size="27" font-weight="550" fill="#9bf1c2" data-max-width="448">.\funbot</text>
+<text x="66" y="397" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="21" font-weight="500" fill="#183f31">Mac</text>
+<rect x="63" y="417" width="484" height="64" rx="12" fill="#102d23"/>
+<text x="81" y="453" font-family="SFMono-Regular,Consolas,monospace" font-size="27" font-weight="550" fill="#9bf1c2" data-max-width="448">./funbot</text>
+<rect x="610" y="165" width="550" height="400" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="632" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="651" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="684" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">网页 → 设置 → 解锁</text>
+<text x="635" y="258" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="600" fill="#183f31">输入导入时设置的密钥文件密码</text>
+<rect x="635" y="281" width="500" height="60" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="653" y="320" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#60796c">密钥文件密码</text>
+<rect x="635" y="369" width="500" height="48" rx="9" fill="#145d41"/>
+<text x="885.0" y="401" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">解锁</text>
+<text x="635" y="472" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">看到“已解锁”后，</text>
+<text x="635" y="508" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">核对主网、主号地址和账号组。</text>
+<rect x="40" y="590" width="1120" height="125" rx="14" fill="#dceddf"/>
+<text x="65" y="631" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">浏览器没自动打开？</text>
+<text x="65" y="672" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="500" fill="#183f31">复制终端本次打印的完整链接，连同 ?t=… 一起打开。</text>
+<text x="65" y="702" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="20" font-weight="500" fill="#183f31">保留终端窗口；关闭终端会停止本地服务。</text>
+</svg>

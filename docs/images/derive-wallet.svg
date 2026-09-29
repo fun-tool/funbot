@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-labelledby="title desc">
+<title id="title">派生子号：一组助记词，多个钱包</title><desc id="desc">例子：第 0 个地址已经是主号，再派生 23 个子号，合计 24 个账号。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="860" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">派生子号：一组助记词，多个钱包</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">例子：第 0 个地址已经是主号，再派生 23 个子号，合计 24 个账号。</text>
+<text x="40" y="836" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="40" y="165" width="640" height="530" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="62" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="81" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">1</text>
+<text x="114" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">设置 → 从已保存的助记词派生钱包</text>
+<text x="66" y="275" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">助记词组</text>
+<rect x="275" y="245" width="378" height="49" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="291" y="276" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="600" fill="#183f31">选择已导入的主号助记词组</text>
+<text x="66" y="346" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">起始序号</text>
+<rect x="275" y="316" width="378" height="49" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="291" y="347" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="600" fill="#183f31">1</text>
+<text x="66" y="417" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">派生数量</text>
+<rect x="275" y="387" width="378" height="49" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="291" y="418" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="600" fill="#183f31">23</text>
+<text x="66" y="488" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">新钱包备注前缀</text>
+<rect x="275" y="458" width="378" height="49" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="291" y="489" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="600" fill="#183f31">队员</text>
+<text x="66" y="559" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">密钥文件密码</text>
+<rect x="275" y="529" width="378" height="49" rx="8" fill="#f4f8f5" stroke="#bfd4c5"/>
+<text x="291" y="560" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="600" fill="#183f31">输入原密钥文件密码</text>
+<rect x="275" y="613" width="378" height="48" rx="9" fill="#145d41"/>
+<text x="464.0" y="645" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="650" fill="#fff">派生并加密保存</text>
+<rect x="720" y="165" width="440" height="530" rx="14" fill="#fff" stroke="#cbded1"/>
+<rect x="742" y="185" width="38" height="38" rx="19" fill="#145d41"/>
+<text x="761" y="212" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#fff">2</text>
+<text x="794" y="213" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">保存后看到这些账号</text>
+<rect x="746" y="245" width="388" height="65" rx="14" fill="#dff2e6"/>
+<text x="771" y="286" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="650" fill="#183f31">主号：序号 0（已存在）</text>
+<path d="M940 326 L940 363" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="772" y="411" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="500" fill="#183f31">子号：序号 1</text>
+<text x="772" y="459" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="500" fill="#183f31">子号：序号 2</text>
+<text x="772" y="507" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="500" fill="#183f31">……</text>
+<text x="772" y="555" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="500" fill="#183f31">子号：序号 23</text>
+<text x="768" y="634" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="700" fill="#183f31">总计：1 个主号 + 23 个子号</text>
+<rect x="40" y="728" width="1120" height="54" rx="14" fill="#dceddf"/>
+<text x="62" y="763" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600" fill="#183f31">只选择已保存的助记词组，不在页面粘贴助记词。派生后还要委托、入册和授权。</text>
+</svg>

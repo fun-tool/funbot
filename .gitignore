@@ -1,0 +1,15 @@
+/funbot
+/funbot.exe
+.env
+.env.*
+*.log
+.DS_Store
+keys.json*
+*.pending.json
+*.settings.json
+*.lock
+*.bak
+keystore/
+.fun_game_bot*/
+
+.data/

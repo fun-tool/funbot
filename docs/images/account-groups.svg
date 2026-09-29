@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">多组账号管理：一个文件夹，就是一组账号</title><desc id="desc">编译一次，把同一台电脑编译好的 funbot 分别复制到多个新文件夹。。操作示意，不含真实钱包信息。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#237b59"/></marker></defs>
+<rect x="0" y="0" width="1200" height="850" rx="24" fill="#f3f7f4"/>
+<text x="40" y="40" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#3a7359">FUNBOT  /  看图操作</text>
+<text x="40" y="91" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="36" font-weight="750" fill="#183f31">多组账号管理：一个文件夹，就是一组账号</text>
+<text x="40" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#476257">编译一次，把同一台电脑编译好的 funbot 分别复制到多个新文件夹。</text>
+<text x="40" y="826" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="17" font-weight="500" fill="#60796c">操作示意 · 以实际页面提示为准 · 助记词和私钥只在本机终端输入</text>
+<rect x="355" y="165" width="490" height="100" rx="14" fill="#102d23"/>
+<text x="391" y="209" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="29" font-weight="700" fill="#fff">编译好的 funbot 程序</text>
+<text x="391" y="244" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#bdebd0">用鼠标复制、粘贴</text>
+<path d="M600 280 L215 338" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M40 375 V360 H105 L120 375 H390 V650 H40Z" fill="#f8e8b4" stroke="#d7bd71" stroke-width="2"/>
+<text x="60" y="415" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">账号组A</text>
+<text x="64" y="465" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="650" fill="#183f31">funbot  程序</text>
+<text x="64" y="518" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="650" fill="#183f31">.data  本组钱包与设置</text>
+<text x="64" y="575" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="21" font-weight="500" fill="#183f31">分别导入本组的主号和子号</text>
+<text x="64" y="612" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">分别启动、解锁和设置</text>
+<path d="M600 280 L600 338" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M425 375 V360 H490 L505 375 H775 V650 H425Z" fill="#f8e8b4" stroke="#d7bd71" stroke-width="2"/>
+<text x="445" y="415" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">账号组B</text>
+<text x="449" y="465" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="650" fill="#183f31">funbot  程序</text>
+<text x="449" y="518" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="650" fill="#183f31">.data  本组钱包与设置</text>
+<text x="449" y="575" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="21" font-weight="500" fill="#183f31">分别导入本组的主号和子号</text>
+<text x="449" y="612" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">分别启动、解锁和设置</text>
+<path d="M600 280 L985 338" stroke="#237b59" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M810 375 V360 H875 L890 375 H1160 V650 H810Z" fill="#f8e8b4" stroke="#d7bd71" stroke-width="2"/>
+<text x="830" y="415" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">账号组C</text>
+<text x="834" y="465" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="650" fill="#183f31">funbot  程序</text>
+<text x="834" y="518" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="650" fill="#183f31">.data  本组钱包与设置</text>
+<text x="834" y="575" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="21" font-weight="500" fill="#183f31">分别导入本组的主号和子号</text>
+<text x="834" y="612" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">分别启动、解锁和设置</text>
+<rect x="40" y="687" width="1120" height="90" rx="14" fill="#dceddf"/>
+<text x="65" y="725" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="700" fill="#183f31">新建一组：只复制程序，不复制其他组的 .data。</text>
+<text x="65" y="758" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">.data 在首次启动或导入时自动创建。每组打开自己的链接，并核对主号。</text>
+</svg>
