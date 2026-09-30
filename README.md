@@ -67,7 +67,13 @@ go version
 
 ### 4. 编译
 
-在能看到 `go.mod` 的源码文件夹中执行：
+先设置 Go 依赖下载代理，改善国内网络下下载依赖超时的问题：
+
+```powershell
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
+设置会保存在本机，通常只需执行一次。然后在能看到 `go.mod` 的源码文件夹中编译：
 
 ```powershell
 go build .
@@ -164,7 +170,13 @@ go version
 
 ### 4. 编译
 
-在能看到 `go.mod` 的源码文件夹中执行：
+先设置 Go 依赖下载代理，改善国内网络下下载依赖超时的问题：
+
+```sh
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
+设置会保存在本机，通常只需执行一次。然后在能看到 `go.mod` 的源码文件夹中编译：
 
 ```sh
 go build .
@@ -410,7 +422,7 @@ Mac：
 
 **一直显示 `downloading`**
 
-首次编译需要下载依赖，请先等待。网络超时后检查网络，再重试编译命令。
+首次编译需要下载依赖，请先等待。若提示下载超时，按上方「编译」步骤设置 `GOPROXY`，再执行 `go build .`；仍失败时检查网络和具体报错。
 
 **找不到编译好的程序**
 
