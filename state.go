@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"sync"
 	"time"
 
@@ -49,19 +50,21 @@ type View struct {
 	LockIn              int                 `json:"lockIn"`
 	HasVault            bool                `json:"hasVault"`
 
-	MasterReady bool        `json:"masterReady"`
-	Busy        string      `json:"busy"`
-	Contract    string      `json:"contract"`
-	Net         string      `json:"net"`
-	Block       uint64      `json:"block"`
-	Seats       []VaultMeta `json:"seats"`
-	Master      string      `json:"master"`
-	Config      *Config     `json:"config"`
-	Overview    *Overview   `json:"overview"`
-	Rows        []*Pulse    `json:"rows"`
-	Batch       Progress    `json:"batch"`
-	Log         []Line      `json:"log"`
-	GasPrice    string      `json:"gasPrice"`
+	MasterReady     bool            `json:"masterReady"`
+	Delegations     map[string]bool `json:"delegations"`
+	DelegationError string          `json:"delegationError,omitempty"`
+	Busy            string          `json:"busy"`
+	Contract        string          `json:"contract"`
+	Net             string          `json:"net"`
+	Block           uint64          `json:"block"`
+	Seats           []VaultMeta     `json:"seats"`
+	Master          string          `json:"master"`
+	Config          *Config         `json:"config"`
+	Overview        *Overview       `json:"overview"`
+	Rows            []*Pulse        `json:"rows"`
+	Batch           Progress        `json:"batch"`
+	Log             []Line          `json:"log"`
+	GasPrice        string          `json:"gasPrice"`
 }
 
 type State struct {
@@ -83,6 +86,7 @@ func (s *State) Snapshot() View {
 	copy(out.Log, s.logs)
 	out.Seats = append([]VaultMeta(nil), s.v.Seats...)
 	out.Rows = append([]*Pulse(nil), s.v.Rows...)
+	out.Delegations = maps.Clone(s.v.Delegations)
 	return out
 }
 

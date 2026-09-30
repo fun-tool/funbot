@@ -1087,3 +1087,92 @@ code {
 .entry-mode select { flex: 1; max-width: 400px; padding: 10px; background: white; border: 1px solid #8eaaa0; border-radius: 8px; }
 #systemIdentity { max-width: 320px; overflow-wrap: anywhere; }
 #masterStandalone { overflow-wrap: anywhere; }
+
+.address-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.address-copy .address-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+button.copy-address {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #536b62;
+}
+button.copy-address svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+button.copy-address:hover {
+  background: #e5f3ec;
+  color: var(--jade);
+}
+button.copy-address:focus-visible {
+  outline: 2px solid var(--jade);
+  outline-offset: 2px;
+}
+.account-name {
+  cursor: text;
+}
+.account-name input {
+  cursor: pointer;
+}
+.config-address {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0;
+}
+.config-address > span:first-child {
+  flex: 0 0 4em;
+}
+.copy-notice {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: calc(100vw - 32px);
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: #102e24;
+  color: #fff;
+  box-shadow: 0 4px 18px #0003;
+  font-weight: 700;
+  pointer-events: none;
+}
+.clipboard-buffer {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+}
+#seatWrap th:first-child,
+#seatWrap th:nth-child(5) {
+  width: 28%;
+}
+#seatWrap th:nth-child(2),
+#seatWrap th:nth-child(3),
+#seatWrap th:nth-child(4) {
+  width: 10%;
+}
+#seatWrap th:last-child {
+  width: 14%;
+}

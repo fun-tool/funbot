@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -61,6 +62,9 @@ func (r *Runner) Attach(ctx context.Context, addr common.Address) error {
 		v.Contract = addr.Hex()
 		v.Config = cfg
 		v.Net = label
+		v.Delegations = nil
+		v.DelegationError = ""
+		v.MasterReady = false
 	})
 	r.st.Logf("ok", "已连上【%s】合约 %s", label, short(addr))
 	return nil
@@ -102,6 +106,36 @@ func (r *Runner) Deploy(ctx context.Context, shifu common.Address) (common.Addre
 	return addr, nil
 }
 
+func (r *Runner) refreshDelegations(ctx context.Context) error {
+	cfg := r.Config()
+	var status map[string]bool
+	var err error
+	if cfg != nil && cfg.Impl != (common.Address{}) {
+		meta := r.ks.Meta()
+		seats := make([]*Seat, 0, len(meta))
+		for _, m := range meta {
+			seats = append(seats, &Seat{Address: common.HexToAddress(m.Address)})
+		}
+		var verified map[common.Address]bool
+		verified, err = r.chain.VerifyDelegation(ctx, seats, cfg.Impl, nil)
+		if err == nil {
+			status = make(map[string]bool, len(verified))
+			for address, delegated := range verified {
+				status[strings.ToLower(address.Hex())] = delegated
+			}
+		}
+	}
+	r.st.Set(func(v *View) {
+		v.Delegations = status
+		v.DelegationError = ""
+		if err != nil {
+			v.DelegationError = err.Error()
+		}
+		v.MasterReady = cfg != nil && status[strings.ToLower(cfg.Master.Hex())]
+	})
+	return err
+}
+
 func (r *Runner) Refresh(ctx context.Context) (err error) {
 	defer func() {
 		if err != nil {
@@ -120,12 +154,11 @@ func (r *Runner) Refresh(ctx context.Context) (err error) {
 	if master == nil {
 		return nil
 	}
-	code, err := r.chain.CodeAt(ctx, master.Address)
-	if err != nil {
+	if err := r.refreshDelegations(ctx); err != nil {
 		return err
 	}
 	cfg := r.Config()
-	if cfg == nil || !equalHex(code, delegationCode(cfg.Impl)) {
+	if cfg == nil || !r.st.Snapshot().MasterReady {
 		r.st.Set(func(v *View) {
 			v.MasterReady = false
 			v.Overview = nil
@@ -142,6 +175,8 @@ func (r *Runner) Refresh(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
+
+	onChain = r.ks.localRoster(onChain)
 
 	labels := map[common.Address]string{}
 	for _, s := range r.ks.Seats() {
@@ -191,6 +226,9 @@ func (r *Runner) Refresh(ctx context.Context) (err error) {
 }
 
 func (r *Runner) PlayOne(ctx context.Context, who common.Address) error {
+	if err := r.ks.requireLocalAccounts([]common.Address{who}); err != nil {
+		return err
+	}
 	if r.settings != nil && !r.settings.Get().MasterPlays {
 		if master := r.ks.Master(); master != nil && master.Address == who {
 			return fmt.Errorf("设置已关闭主号参赛")
@@ -210,6 +248,9 @@ func (r *Runner) PlayOne(ctx context.Context, who common.Address) error {
 }
 
 func (r *Runner) HarvestOne(ctx context.Context, who common.Address) error {
+	if err := r.ks.requireLocalAccounts([]common.Address{who}); err != nil {
+		return err
+	}
 	sq, master, err := r.ready()
 	if err != nil {
 		return err
@@ -334,12 +375,12 @@ func (r *Runner) Delegate(ctx context.Context, who []common.Address) error {
 }
 
 func (r *Runner) AddMembers(ctx context.Context, who []common.Address) error {
+	if err := r.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	sq, master, err := r.ready()
 	if err != nil {
 		return err
-	}
-	if len(who) == 0 {
-		return fmt.Errorf("没有要加的号")
 	}
 	rec, err := sq.AddMembers(ctx, master, who)
 	if err != nil {
@@ -362,12 +403,12 @@ func (r *Runner) RemoveMember(ctx context.Context, who common.Address) error {
 }
 
 func (r *Runner) Prepare(ctx context.Context, who []common.Address) error {
+	if err := r.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	sq, master, err := r.ready()
 	if err != nil {
 		return err
-	}
-	if len(who) == 0 {
-		return fmt.Errorf("请选择要拜师授权的账号")
 	}
 	if err := validateShifu(ctx, r.chain, r.Config().Shifu); err != nil {
 		return err
@@ -410,6 +451,9 @@ func (r *Runner) Prepare(ctx context.Context, who []common.Address) error {
 }
 
 func (r *Runner) SweepGas(ctx context.Context, who []common.Address) error {
+	if err := r.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	sq, master, err := r.ready()
 	if err != nil {
 		return err

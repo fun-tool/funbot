@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Plan struct {
@@ -118,6 +117,7 @@ func (b *Batch) loop(ctx context.Context, p Plan) {
 		b.st.Logf("bad", "读取名册失败：%v", err)
 		return
 	}
+	who = b.run.ks.localRoster(who)
 	if len(p.Who) > 0 {
 		roster := map[common.Address]bool{}
 		for _, a := range who {
@@ -126,7 +126,7 @@ func (b *Batch) loop(ctx context.Context, p Plan) {
 		who = nil
 		for _, a := range p.Who {
 			if !roster[a] {
-				b.st.Logf("bad", "%s 不在名册，已停止", short(a))
+				b.st.Logf("bad", "%s 不在本地账号或链上名册，已停止", short(a))
 				return
 			}
 			who = append(who, a)
@@ -303,6 +303,9 @@ func (b *Batch) loop(ctx context.Context, p Plan) {
 }
 
 func (b *Batch) HarvestNow(who []common.Address) error {
+	if err := b.run.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	if _, _, err := b.run.ready(); err != nil {
 		return err
 	}
@@ -340,6 +343,9 @@ func (b *Batch) HarvestNow(who []common.Address) error {
 }
 
 func (b *Batch) harvest(ctx context.Context, who []common.Address) error {
+	if err := b.run.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	sq, master, err := b.run.ready()
 	if err != nil {
 		b.st.Logf("bad", "%v", err)
@@ -354,14 +360,8 @@ func (b *Batch) harvest(ctx context.Context, who []common.Address) error {
 			return ctx.Err()
 		}
 		b.run.ks.Touch()
-		var err error
 		before, berr := sq.Overview(ctx)
-		var rec *types.Receipt
-		if len(who) == 0 {
-			rec, err = sq.HarvestAll(ctx, master, 0, 0)
-		} else {
-			rec, err = sq.HarvestSome(ctx, master, who)
-		}
+		rec, err := sq.HarvestSome(ctx, master, who)
 		if err == nil {
 			err = sq.HarvestJiaziPages(ctx, master, who)
 		}

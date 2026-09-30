@@ -324,11 +324,6 @@ func (s *Squad) RemoveMember(ctx context.Context, master *Seat, who common.Addre
 	return s.send(ctx, master, 0, "removeMember", who)
 }
 
-func (s *Squad) HarvestAll(ctx context.Context, master *Seat, from, count int) (*types.Receipt, error) {
-	return s.send(ctx, master, 0, "harvestAll",
-		big.NewInt(int64(from)), big.NewInt(int64(count)))
-}
-
 func (s *Squad) HarvestSome(ctx context.Context, master *Seat, who []common.Address) (*types.Receipt, error) {
 	return s.send(ctx, master, 0, "harvestSome", who)
 }

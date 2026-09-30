@@ -78,10 +78,10 @@ func (s *Squad) previewPlay(ctx context.Context, who []common.Address, minBlock 
 		if estimate == 0 {
 			return fmt.Errorf("节点返回无效的 Gas 预估")
 		}
-		if estimate > head.GasLimit || estimate/5 > head.GasLimit-estimate {
+		if estimate > head.GasLimit || estimate/2 > head.GasLimit-estimate {
 			return &playUnavailable{Reason: "整批 Gas 加安全余量后超过区块上限，请减少选择的账号", Capacity: true}
 		}
-		gas := estimate + estimate/5
+		gas := estimate + estimate/2
 		for {
 			msg := call
 			msg.Gas = gas

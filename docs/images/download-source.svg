@@ -29,6 +29,6 @@
 <text x="640" y="487" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#183f31">认文件内容，不必修改文件夹名称。</text>
 <rect x="40" y="533" width="1120" height="145" rx="14" fill="#102d23"/>
 <text x="65" y="576" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" font-weight="700" fill="#fff">看到这些文件，就找对位置了。</text>
-<text x="65" y="621" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#bdebd0">下一步：在这个文件夹打开命令行 → 安装 Go → go build .</text>
+<text x="65" y="621" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="500" fill="#bdebd0">下一步：在这个文件夹打开命令行 → 安装 Go → 按对应系统的教程编译</text>
 <text x="65" y="655" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500" fill="#bdebd0">下载的 ZIP 要先解压，不能在压缩包里面直接编译。</text>
 </svg>

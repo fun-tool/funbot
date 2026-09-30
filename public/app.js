@@ -30,12 +30,89 @@ const esc = (t) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
   );
 
+let pointerTarget = null;
+const renderedHTML = new WeakMap();
+const deferredHTML = new Map();
+let selectionFrame = 0;
+let copyNoticeTimer = 0;
+
+function preserveText(el) {
+  if (pointerTarget && el.contains(pointerTarget)) return true;
+  const selected = window.getSelection();
+  if (!selected || selected.isCollapsed) return false;
+  for (let i = 0; i < selected.rangeCount; i++) {
+    if (selected.getRangeAt(i).intersectsNode(el)) return true;
+  }
+  return false;
+}
+
+function setHTML(id, html) {
+  const el = $(id);
+  if (renderedHTML.get(el) === html) { deferredHTML.delete(id); return true; }
+  if (preserveText(el)) { deferredHTML.set(id, html); return false; }
+  deferredHTML.delete(id);
+  el.innerHTML = html;
+  renderedHTML.set(el, html);
+  return true;
+}
+
+function addressHTML(address, compact = false) {
+  if (!/^0x[0-9a-f]{40}$/i.test(address || "")) return esc(address || "—");
+  return `<span class="address-copy"><span class="ad address-text" title="${esc(address)}">${esc(compact ? short(address) : address)}</span><button type="button" class="copy-address" data-copy-address="${esc(address)}" aria-label="复制完整地址 ${esc(address)}" title="复制完整地址"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></span>`;
+}
+
+async function copyAddress(address) {
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+    await navigator.clipboard.writeText(address);
+  } catch {
+    const active = document.activeElement;
+    const selected = window.getSelection();
+    const ranges = selected ? Array.from({ length: selected.rangeCount }, (_, i) => selected.getRangeAt(i).cloneRange()) : [];
+    const input = document.createElement("textarea");
+    input.value = address;
+    input.readOnly = true;
+    input.className = "clipboard-buffer";
+    document.body.append(input);
+    let copied = false;
+    try {
+      input.select();
+      copied = document.execCommand("copy");
+    } finally {
+      input.remove();
+      active?.focus({ preventScroll: true });
+      if (selected) {
+        selected.removeAllRanges();
+        ranges.forEach((range) => selected.addRange(range));
+      }
+    }
+    if (!copied) throw new Error("copy failed");
+  }
+}
+
+function copyNotice(message) {
+  clearTimeout(copyNoticeTimer);
+  const notice = $("copyNotice");
+  notice.textContent = message;
+  notice.hidden = false;
+  copyNoticeTimer = setTimeout(() => { notice.hidden = true; }, 2500);
+}
+
+function resumeRendering() {
+  if (selectionFrame) return;
+  selectionFrame = requestAnimationFrame(() => {
+    selectionFrame = 0;
+    render();
+    for (const [id, html] of deferredHTML) setHTML(id, html);
+  });
+}
+
 function put(id, text, cls) {
   const el = $(id);
   if (!el) return;
   const t = String(text ?? "—");
   if (cls !== undefined) el.className = cls;
-  if (el.textContent !== t) el.textContent = t;
+  if (el.textContent !== t && !preserveText(el)) el.textContent = t;
 }
 
 let V = null;
@@ -60,10 +137,9 @@ function renderLog() {
   const lines = [...(V?.log || [])].reverse();
   const signature = JSON.stringify(lines);
   if (signature === logSignature) return;
-  logSignature = signature;
   const log = $("log"),
     top = log.scrollTop;
-  log.innerHTML = lines.length
+  const html = lines.length
     ? lines
         .map(
           (l) =>
@@ -71,6 +147,8 @@ function renderLog() {
         )
         .join("")
     : '<div class="log-empty">等待执行记录。启动任务后，结果会显示在这里。</div>';
+  if (!setHTML("log", html)) return;
+  logSignature = signature;
   put("logCount", `${lines.length} 条记录 · 最近 200 条`);
   log.scrollTop = $("logFollow").checked ? log.scrollHeight : top;
 }
@@ -132,6 +210,7 @@ function rosterRows() {
   const labels = new Map(seats.map((s) => [s.address.toLowerCase(), s.label]));
   const master = (V?.master || "").toLowerCase();
   return [...(V?.rows || [])]
+    .filter((r) => order.has(r.who.toLowerCase()))
     .sort((a, b) => {
       const x = a.who.toLowerCase(),
         y = b.who.toLowerCase();
@@ -187,7 +266,7 @@ function mentorText(address) {
   const seat = (V?.seats || []).find(
     (s) => s.address.toLowerCase() === a.toLowerCase(),
   );
-  return `${seat ? esc(seat.label) + "<br>" : ""}<span class="ad">${esc(a)}</span>`;
+  return `${seat ? esc(seat.label) + "<br>" : ""}${addressHTML(a)}`;
 }
 
 const picked = new Set();
@@ -233,7 +312,7 @@ function isPicked(a) {
   return allSelected || picked.has(a.toLowerCase());
 }
 function actionSelection(play = false) {
-  let rows = (V?.rows || []).filter((r) => isPicked(r.who));
+  let rows = rosterRows().filter((r) => isPicked(r.who));
   if (play && !$("cbMasterPlays").checked)
     rows = rows.filter(
       (r) => r.who.toLowerCase() !== (V.master || "").toLowerCase(),
@@ -340,22 +419,20 @@ function render() {
   const cfg = V.config;
   $("cfgBox").hidden = !cfg;
   if (cfg) {
-    $("cfgBox").innerHTML =
-      `擂台 ${cfg.arena}<br>代币 ${cfg.token}<br>师父 ${cfg.shifu}<br>` +
-      `主号 ${cfg.master}<br>委托目标 ${cfg.impl}`;
+    setHTML("cfgBox", [["擂台", cfg.arena], ["代币", cfg.token], ["师父", cfg.shifu], ["主号", cfg.master], ["委托目标", cfg.impl]]
+      .map(([label, address]) => `<div class="config-address"><span>${label}</span>${addressHTML(address)}</div>`).join(""));
   }
 
   const rows = rosterRows();
   const seats = orderedSeats();
   const inRoster = new Set(rows.map((r) => r.who.toLowerCase()));
-  const delegated = new Set(
-    rows.filter((r) => r.delegated).map((r) => r.who.toLowerCase()),
-  );
+  const delegated = V.delegations || {};
   $("seatWrap").hidden = !seats.length;
   const yes = '<span class="pill ok">是</span>';
   const no = '<span class="pill no">否</span>';
   const available = new Set(seats.map((s) => s.address.toLowerCase()));
   for (const a of setupPicked) if (!available.has(a)) setupPicked.delete(a);
+  for (const a of picked) if (!available.has(a)) picked.delete(a);
   put("delegateCount", `已选 ${setupPicked.size} / ${seats.length} 个`);
   const prepBusy = acting || !!V.busy || !!V.batch?.running || locked;
   $("btnDelegate").disabled = prepBusy || !setupPicked.size;
@@ -364,20 +441,20 @@ function render() {
   $("btnRoster").disabled = prepBusy || !selectedSetupAddresses($("cbMasterPlays").checked).length;
   $("btnRosterAll").disabled = prepBusy || !seats.length;
   document.querySelectorAll("#delegateSelection button, #delegateSelection input").forEach((el) => { el.disabled = prepBusy; });
-  $("seatRows").innerHTML = seats
+  setHTML("seatRows", seats
     .map((s, i) => {
       const isM = s.kind === "master";
       const low = s.address.toLowerCase();
       return groupHeading(s.address, seats[i - 1]?.address, "setup", 6) + `<tr>
-      <td><label class="chk"><input type="checkbox" class="delegate-pick" data-a="${esc(s.address)}"${setupPicked.has(low) ? " checked" : ""}${prepBusy ? " disabled" : ""} aria-label="选择账号 ${i + 1}" /><span class="nm">${i + 1}. ${esc(s.label)}</span></label><div class="ad">${esc(s.address)}</div></td>
+      <td><div class="chk account-name"><input type="checkbox" class="delegate-pick" data-a="${esc(s.address)}"${setupPicked.has(low) ? " checked" : ""}${prepBusy ? " disabled" : ""} aria-label="选择账号 ${i + 1}" /><span class="nm">${i + 1}. ${esc(s.label)}</span></div>${addressHTML(s.address)}</td>
       <td data-label="身份"><span class="pill ${isM ? "ok" : "dim"}">${isM ? "主号" : "队员"}</span></td>
       <td data-label="在名册">${inRoster.has(low) ? yes : no}</td>
-      <td data-label="已委托">${isM ? (V.masterReady ? yes : no) : delegated.has(low) ? yes : inRoster.has(low) ? no : '<span class="pill dim">待核对</span>'}</td>
+      <td data-label="已委托" title="${esc(V.delegationError || '是否委托到当前合约，与加入名册无关')}">${delegated[low] === true ? yes : delegated[low] === false ? no : `<span class="pill dim">${V.delegationError ? '读取失败' : '待核对'}</span>`}</td>
       <td class="mentor" data-label="链上师父">${mentorText(s.address)}</td>
       <td class="act"><button class="mini seatrename" data-a="${esc(s.address)}"${acting || V.busy || V.batch?.running ? " disabled" : ""}>改名</button> <button class="mini seatrm" data-a="${esc(s.address)}">删</button></td>
     </tr>`;
     })
-    .join("");
+    .join(""));
 
   let blocked = "";
   if (locked) blocked = "密钥锁着 → 去「设置」解锁";
@@ -396,7 +473,7 @@ function render() {
   $("btnFund").disabled = !!blocked || !!bt.running || !!V.busy || acting;
   $("fundAmount").disabled = !!bt.running || !!V.busy || acting;
 
-  const gasSum = (V.rows || []).reduce(
+  const gasSum = rows.reduce(
     (n, r) => n + Number(r.gasBalance || 0),
     0,
   );
@@ -404,7 +481,7 @@ function render() {
   $("btnSweepGas").className = gasSum > 0 ? "go pulse" : "";
   $("btnStop").hidden = !bt.running;
 
-  const reapable = (V.rows || []).reduce((n, r) => n + Number(r.ready || 0), 0);
+  const reapable = rows.reduce((n, r) => n + Number(r.ready || 0), 0);
   $("btnReapAll").className = reapable > 0 ? "go pulse" : "";
   $("btnReapAll").disabled =
     !!blocked ||
@@ -450,7 +527,7 @@ function render() {
   if (blocked) return;
 
   $("masterStandalone").hidden = $("cbMasterPlays").checked || rows.some((r) => r.who.toLowerCase() === (V.master || "").toLowerCase());
-  put("masterStandalone", `主号 · 不参加比赛　${V.master || "—"}　盟主 ${V.masterChampionships ?? "—"} 次　fLGNS ${V.overview?.masterBalance || "—"}　Gas ${V.overview?.masterGas || "—"}`);
+  setHTML("masterStandalone", `主号 · 不参加比赛　${addressHTML(V.master)}　盟主 ${esc(V.masterChampionships ?? "—")} 次　fLGNS ${esc(V.overview?.masterBalance || "—")}　Gas ${esc(V.overview?.masterGas || "—")}`);
   const ov = V.overview;
   if (ov) {
     put("mBal", ov.masterBalance, "v jade");
@@ -463,12 +540,12 @@ function render() {
   put("sumTotal", sum.toFixed(2), "v " + (sum > 0 ? "jade" : "faint"));
   put("seats", `${rows[0].openSeats}/${rows[0].seats}`, "v");
 
-  $("rows").innerHTML = rows
+  setHTML("rows", rows
     .map((r, index) => {
       const heading = groupHeading(r.who, rows[index - 1]?.who, "play", 11);
       const on = isPicked(r.who);
       const ck = `<td class="pk"><input type="checkbox" class="ck" aria-label="选择第 ${index + 1} 个账号" data-a="${r.who}"${on ? " checked" : ""}${bt.running || V.busy ? " disabled" : ""}></td>`;
-      const who = `<div class="nm">${index + 1}. ${esc(r.label || short(r.who))}${r.who.toLowerCase() === (V.master || "").toLowerCase() ? " · 主号" : ""}</div><div class="ad">${short(r.who)}</div>`;
+      const who = `<div class="nm">${index + 1}. ${esc(r.label || short(r.who))}${r.who.toLowerCase() === (V.master || "").toLowerCase() ? " · 主号" : ""}</div>${addressHTML(r.who, true)}`;
       const championships = `<td data-label="盟主次数" class="n championships" title="${esc(r.championships == null ? V.championshipsError || '等待读取盟主次数' : '累计已裁决的盟主次数')}">${esc(r.championships ?? "—")}</td>`;
       if (!r.delegated) {
         return heading + `<tr>${ck}<td class="identity">${who}</td><td class="status" data-label="状态"><span class="pill no">未委托</span></td>
@@ -505,7 +582,7 @@ function render() {
             ${(r.canHarvest || r.jiaziTruncated) && !bt.running && !V.busy ? "" : "disabled"}>收</button>
         </td></tr>`;
     })
-    .join("");
+    .join(""));
 }
 
 function updatePickInfo() {
@@ -526,6 +603,25 @@ function updatePickInfo() {
 }
 
 function wire() {
+  document.addEventListener("pointerdown", (ev) => { if (ev.button === 0) pointerTarget = ev.target; }, true);
+  const releaseText = () => { pointerTarget = null; resumeRendering(); };
+  document.addEventListener("pointerup", releaseText);
+  document.addEventListener("pointercancel", releaseText);
+  window.addEventListener("blur", releaseText);
+  document.addEventListener("selectionchange", resumeRendering);
+  document.addEventListener("click", async (ev) => {
+    const button = ev.target.closest("button[data-copy-address]");
+    if (!button) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    try {
+      await copyAddress(button.dataset.copyAddress);
+      copyNotice("已复制完整地址");
+    } catch {
+      copyNotice("复制失败，请选中地址后手动复制");
+    }
+  }, true);
+
   const setGuide = (platform) => {
     for (const [key, suffix] of [
       ["mac", "Mac"],
@@ -690,7 +786,7 @@ function wire() {
   $("btnReapAll").onclick = (e) => {
     const who = actionSelection();
     if (!who.length) return alert("请先选择账号");
-    const rows = (V?.rows || []).filter((r) => who.includes(r.who));
+    const rows = rosterRows().filter((r) => who.includes(r.who));
     updatePickInfo();
 
     const sum = rows.reduce((n, r) => n + Number(r.ready || 0), 0);
@@ -838,7 +934,7 @@ function wire() {
   $("btnSweepGas").onclick = (e) => {
     const who = actionSelection();
     if (!who.length) return alert("请先选择账号");
-    const rows = (V?.rows || []).filter((r) => who.includes(r.who));
+    const rows = rosterRows().filter((r) => who.includes(r.who));
     const sum = rows.reduce((n, r) => n + Number(r.gasBalance || 0), 0);
     if (sum <= 0) return alert("这些号手上没有 gas 币");
     act(
@@ -921,7 +1017,7 @@ function wire() {
     if (!b) return;
     if (
       !confirm(
-        `删掉 ${short(b.dataset.a)}？\n链上的号不受影响，但这里就没有它的私钥了。`,
+        `删掉 ${short(b.dataset.a)}？\n删除后不再显示或参与本程序操作。链上名册、7702 委托和资产不会自动移除；取消委托请在删除前单独操作。`,
       )
     )
       return;
@@ -979,12 +1075,12 @@ function showSourceWallets() {
   if (!source) return;
   $("deriveStart").value = source.nextIndex;
   $("deriveLabel").value = source.label || "派生钱包";
-  $("derivedWallets").innerHTML = source.wallets
+  setHTML("derivedWallets", source.wallets
     .map(
       (w) =>
-        `<tr><td>${esc(w.label)}</td><td class="ad">${esc(w.address)}<br>${esc(w.path)}</td></tr>`,
+        `<tr><td>${esc(w.label)}</td><td>${addressHTML(w.address)}<div class="ad">${esc(w.path)}</div></td></tr>`,
     )
-    .join("");
+    .join(""));
 }
 
 function wireDerivation() {

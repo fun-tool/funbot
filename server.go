@@ -175,6 +175,17 @@ func (s *Server) snapshot() View {
 	v.Locked = s.ks.Locked()
 	v.HasVault = s.ks.Exists()
 	v.Seats = s.ks.Meta()
+	local := make(map[common.Address]bool, len(v.Seats))
+	for _, seat := range v.Seats {
+		local[common.HexToAddress(seat.Address)] = true
+	}
+	rows := v.Rows[:0]
+	for _, row := range v.Rows {
+		if local[row.Who] {
+			rows = append(rows, row)
+		}
+	}
+	v.Rows = rows
 	v.MnemonicSources = s.ks.MnemonicSources()
 	v.ImportCommands = terminalImportCommands(s.ks.Path())
 	if lim := s.ks.IdleLimit(); lim > 0 && !s.ks.Locked() {
@@ -289,7 +300,23 @@ func (s *Server) handleSeatRemove(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
-	if err := s.busy("删除账号", func(ctx context.Context) error { return s.ks.RemoveSeat(pw, addr) }); err != nil {
+	if err := s.busy("删除账号", func(ctx context.Context) error {
+		if err := s.ks.RemoveSeat(pw, addr); err != nil {
+			return err
+		}
+		if err := s.settings.Update(func(v *Settings) {
+			kept := v.Selected[:0]
+			for _, a := range v.Selected {
+				if common.HexToAddress(a) != addr {
+					kept = append(kept, a)
+				}
+			}
+			v.Selected = kept
+		}); err != nil {
+			s.st.Logf("warn", "账号已删除，但保存选择状态失败：%v", err)
+		}
+		return nil
+	}); err != nil {
 		s.fail(w, 400, err)
 		return
 	}

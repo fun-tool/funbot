@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
 <title id="title">Mac：编译后把程序放进账号组文件夹</title>
-<desc id="desc">操作示意：在源码目录执行 go build .，拖动生成的程序到账号组A，再进入账号组文件夹导入并启动。</desc>
+<desc id="desc">操作示意：在源码目录执行 CGO_ENABLED=0 go build .，拖动生成的程序到账号组A，再进入账号组文件夹导入并启动。</desc>
 <rect width="1200" height="680" rx="24" fill="#f2f7f4"/>
 <text x="40" y="44" fill="#467560" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="16" font-weight="700">FUNBOT  /  操作示意</text>
 <text x="40" y="91" fill="#153d30" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="32" font-weight="700">Mac：先编译，再把程序拖进账号组</text>
@@ -9,7 +9,7 @@
 <text x="63" y="195" fill="#153d30" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" font-weight="700">① funbot 源码文件夹</text>
 <text x="64" y="232" fill="#607367" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="500">go.mod    main.go    public</text>
 <rect x="62" y="251" width="432" height="52" rx="14" fill="#102e24" stroke="#102e24"/>
-<text x="79" y="285" fill="#94f0bf" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="25" font-weight="600">go build .</text>
+<text x="79" y="285" fill="#94f0bf" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="23" font-weight="600">CGO_ENABLED=0 go build .</text>
 <rect x="62" y="320" width="432" height="94" rx="14" fill="#e5f3ec" stroke="#72ab8c"/>
 <path d="M80 339 h28 l10 10 v44 h-38 z" fill="#155b40"/>
 <text x="136" y="357" fill="#153d30" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="26" font-weight="700">funbot</text>

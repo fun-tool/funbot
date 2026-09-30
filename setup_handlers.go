@@ -135,6 +135,11 @@ func (s *Server) handleVaultReload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) participants(ctx context.Context, requested []common.Address) ([]common.Address, error) {
+	if len(requested) > 0 {
+		if err := s.ks.requireLocalAccounts(requested); err != nil {
+			return nil, err
+		}
+	}
 	sq, master, err := s.run.ready()
 	if err != nil {
 		return nil, err
@@ -143,6 +148,7 @@ func (s *Server) participants(ctx context.Context, requested []common.Address) (
 	if err != nil {
 		return nil, err
 	}
+	roster = s.ks.localRoster(roster)
 	want := map[common.Address]bool{}
 	for _, a := range requested {
 		want[a] = true

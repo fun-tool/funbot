@@ -63,7 +63,7 @@ go version
 - **Intel / AMD 电脑**：选 `windows-amd64.msi`。
 - **ARM 电脑**：选 `windows-arm64.msi`。
 
-![安装 Go：Windows 用 WinGet，Mac 用 Homebrew 或官方安装包，重新打开命令行检查版本](docs/images/install-go.png)
+![安装 Go：Windows 用 WinGet，Mac 用终端命令从官网安装，再检查版本](docs/images/install-go.png)
 
 ### 4. 编译
 
@@ -149,42 +149,41 @@ go build .
 
 ### 3. 安装 Go
 
-已经安装 Homebrew 的电脑，执行：
+在终端复制下面两行，一起粘贴后按回车。从 Go 官网下载安装包，自动选择芯片版本，无需 Homebrew：
 
-```sh
-brew install go
+```bash
+curl -fL "https://go.dev/dl/go1.27.1.darwin-$(uname -m | sed 's/x86_64/amd64/').pkg" -o /tmp/go.pkg &&
+sudo installer -pkg /tmp/go.pkg -target /
 ```
 
-没有 Homebrew 时，到 [Go 官网](https://go.dev/dl/) 下载安装包，双击安装：
+出现 `Password:` 时，输入 **Mac 管理员的登录密码**，再按回车。输入时不显示文字或星号，这是正常现象；此处不是钱包密码。
 
-- **Apple 芯片**：选 `darwin-arm64.pkg`。
-- **Intel 芯片**：选 `darwin-amd64.pkg`。
+看到 `The install was successful` 后，在当前终端继续执行：
 
-安装完成后关闭终端，按第 2 步重新打开并进入源码文件夹，检查版本：
-
-```sh
+```bash
+export PATH="/usr/local/go/bin:$PATH"
 go version
 ```
 
-需要 Go **1.26.8 或更高版本**。
+显示 Go **1.26.8 或更高版本**即可继续。`export` 让当前窗口立即找到 Go，以后新打开的终端会加载安装程序设置的路径。
 
 ### 4. 编译
 
 先设置 Go 依赖下载代理，改善国内网络下下载依赖超时的问题：
 
-```sh
+```bash
 go env -w GOPROXY=https://goproxy.cn,direct
 ```
 
-设置会保存在本机，通常只需执行一次。然后在能看到 `go.mod` 的源码文件夹中编译：
+代理通常只需设置一次。然后在能看到 `go.mod` 的源码文件夹中执行：
 
-```sh
-go build .
+```bash
+CGO_ENABLED=0 go build .
 ```
 
-`.` 表示编译当前目录。第一次会下载依赖；命令执行完且没有报错，回到文件夹查看新生成的程序。
+`CGO_ENABLED=0` 仅对本次编译关闭 CGO，不需要安装 Xcode 命令行工具；`.` 表示编译当前目录。
 
-找到新增的 `funbot` 文件，没有后缀，类型为“Unix 可执行文件”，通常显示终端样式图标。拖动的是这个程序文件。
+第一次会下载依赖。等命令执行结束、没有报错后，回到源码文件夹，找到新增的 **`funbot`**：没有后缀，类型为“Unix 可执行文件”，通常显示终端样式图标。
 
 ### 5. 建立账号组文件夹
 
@@ -402,7 +401,7 @@ Mac：
 
 ### 更新与搬家
 
-**更新程序**：下载新源码并执行 `go build .`。退出旧程序后，用新程序替换旧程序，保留各组的 `.data`。
+**更新程序**：下载新源码，Windows 执行 `go build .`，Mac 执行 `CGO_ENABLED=0 go build .`。退出旧程序后，用新程序替换旧程序，保留各组的 `.data`。
 
 **移动文件夹**：退出程序后，移动整个账号组文件夹。更换电脑时，如果系统或芯片不同，需要在新电脑重新编译程序，再迁移 `.data`。
 
@@ -416,13 +415,17 @@ Mac：
 
 安装 Go 1.26.8 或更高版本。关闭旧命令行，重新打开后执行 `go version` 检查。
 
+**Mac 提示安装 clang / 命令行开发者工具**
+
+点击“取消”，在源码文件夹改用 `CGO_ENABLED=0 go build .` 编译。
+
 **编译找不到 `go.mod`**
 
-进入能直接看到 `go.mod`、`main.go`、`public` 的源码文件夹，再执行 `go build .`。
+进入能直接看到 `go.mod`、`main.go`、`public` 的源码文件夹。Windows 执行 `go build .`；Mac 执行 `CGO_ENABLED=0 go build .`。
 
 **一直显示 `downloading`**
 
-首次编译需要下载依赖，请先等待。若提示下载超时，按上方「编译」步骤设置 `GOPROXY`，再执行 `go build .`；仍失败时检查网络和具体报错。
+首次编译需要下载依赖，请先等待。若提示下载超时，按上方「编译」步骤设置 `GOPROXY`，再按自己系统的命令编译；仍失败时检查网络和具体报错。
 
 **找不到编译好的程序**
 
@@ -460,4 +463,4 @@ Mac：
 
 采用 [MIT 许可证](LICENSE)，第三方依赖保留各自许可证。
 
-安装参考：[Go 官方说明](https://go.dev/doc/install) · [WinGet Go 清单](https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/GoLang/Go) · [Homebrew Go](https://formulae.brew.sh/formula/go)。
+安装参考：[Go 官方说明](https://go.dev/doc/install) · [WinGet Go 清单](https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/GoLang/Go)。

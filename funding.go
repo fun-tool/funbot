@@ -80,6 +80,9 @@ func (s *Server) handleFund(w http.ResponseWriter, r *http.Request) {
 }
 
 func (r *Runner) Fund(ctx context.Context, who []common.Address, amount *big.Int) error {
+	if err := r.ks.requireLocalAccounts(who); err != nil {
+		return err
+	}
 	sq, master, err := r.ready()
 	if err != nil {
 		return err

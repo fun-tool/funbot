@@ -12,6 +12,38 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+func (k *Keystore) localRoster(roster []common.Address) []common.Address {
+	members := make(map[common.Address]bool, len(roster))
+	for _, a := range roster {
+		members[a] = true
+	}
+	var local []common.Address
+	for _, seat := range k.Meta() {
+		a := common.HexToAddress(seat.Address)
+		if members[a] {
+			local = append(local, a)
+			delete(members, a)
+		}
+	}
+	return local
+}
+
+func (k *Keystore) requireLocalAccounts(who []common.Address) error {
+	if len(who) == 0 {
+		return fmt.Errorf("请明确选择至少一个本地账号")
+	}
+	local := make(map[common.Address]bool)
+	for _, seat := range k.Meta() {
+		local[common.HexToAddress(seat.Address)] = true
+	}
+	for _, a := range who {
+		if !local[a] {
+			return fmt.Errorf("%s 已删除或不在本地账号中，请刷新后重新选择", short(a))
+		}
+	}
+	return nil
+}
+
 func (k *Keystore) RenameSeat(password string, addr common.Address, label string) error {
 	label = strings.TrimSpace(label)
 	if label == "" || !utf8.ValidString(label) || utf8.RuneCountInString(label) > 80 {
