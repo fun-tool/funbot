@@ -13,3 +13,6 @@ keystore/
 .fun_game_bot*/
 
 .data/
+.funbot-*
+/security_best_practices_report.md
+/security_review_*.md

@@ -146,6 +146,9 @@ func (k *Keystore) AutoLockLoop(ctx context.Context, onLock func(time.Duration),
 		case <-ctx.Done():
 			return
 		case <-t.C:
+			if k.Locked() || k.IdleFor() <= k.idle {
+				continue
+			}
 			var release func()
 			if len(acquire) > 0 {
 				release = acquire[0]()
@@ -207,16 +210,6 @@ func (k *Keystore) Master() *Seat {
 		}
 	}
 	return nil
-}
-
-func (k *Keystore) Members() []*Seat {
-	var out []*Seat
-	for _, s := range k.Seats() {
-		if s.Kind == "member" {
-			out = append(out, s)
-		}
-	}
-	return out
 }
 
 func (k *Keystore) Find(addr common.Address) *Seat {

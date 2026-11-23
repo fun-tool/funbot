@@ -116,7 +116,7 @@ func enteredPlayers(rec *types.Receipt, arena common.Address, who []common.Addre
 	}
 	got := map[common.Address]uint64{}
 	for _, l := range rec.Logs {
-		if l.Removed || l.Address != arena || len(l.Topics) != 4 || l.Topics[0] != arenaEnteredTopic {
+		if l == nil || l.Removed || l.Address != arena || len(l.Topics) != 4 || l.Topics[0] != arenaEnteredTopic {
 			continue
 		}
 		a := common.BytesToAddress(l.Topics[3].Bytes())

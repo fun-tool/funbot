@@ -22,6 +22,6 @@ func openBrowser(url string) {
 		cmd = exec.Command("xdg-open", url)
 	}
 	if err := cmd.Run(); err != nil {
-		log.Printf("  打不开浏览器，请手动复制上面那个地址：%v", err)
+		log.Printf("  打不开浏览器：%v。请在终端用 -no-open 启动以获取登录链接", err)
 	}
 }

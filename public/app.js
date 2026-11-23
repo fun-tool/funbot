@@ -187,7 +187,7 @@ function groupHeading(address, previous, scope, columns) {
 function selectAccountGroup(button) {
   if (acting || V?.busy || V?.batch?.running || V?.locked) return;
   const groups = accountGroups(), setup = button.dataset.scope === "setup";
-  if (!setup && allSelected) { rosterRows().forEach((r) => picked.add(r.who.toLowerCase())); allSelected = false; }
+  if (!setup && allSelected) { selectableRows().forEach((r) => picked.add(r.who.toLowerCase())); allSelected = false; }
   const chosen = setup ? setupPicked : picked;
   const available = setup ? orderedSeats().map((s) => s.address) : rosterRows().map((r) => r.who);
   for (const address of available) {
@@ -199,9 +199,9 @@ function selectAccountGroup(button) {
   if (!setup) savePreferences().catch(() => {});
 }
 
-function selectedSetupAddresses(includeMaster = true) {
+function selectedSetupAddresses(includeMaster = true, all = false) {
   return orderedSeats()
-    .filter((s) => setupPicked.has(s.address.toLowerCase()) && (includeMaster || s.kind !== "master"))
+    .filter((s) => (all || setupPicked.has(s.address.toLowerCase())) && (includeMaster || s.kind !== "master"))
     .map((s) => s.address);
 }
 function rosterRows() {
@@ -230,7 +230,7 @@ function paintSelection() {
   updatePickInfo();
 }
 function selectInterval(start, end, checked, base) {
-  const rows = rosterRows();
+  const rows = selectableRows();
   const a = rows.findIndex((r) => r.who.toLowerCase() === start);
   const b = rows.findIndex((r) => r.who.toLowerCase() === end);
   if (a < 0 || b < 0) return;
@@ -366,12 +366,61 @@ function showTab(which) {
     .forEach((b) => b.classList.toggle("on", b.dataset.tab === which));
 }
 
+function mandateAccount(address) {
+  return V.mandates?.accounts?.[address?.toLowerCase()];
+}
+
+function mandateCell(address, field = "available") {
+  const count = mandateAccount(address)?.[field];
+  if (count != null) return esc(count);
+  const reason = V.mandateError || V.balanceError;
+  return reason ? `<span title="${esc(reason)}">查询失败</span>` : "待查询";
+}
+
+function canGatherMandate(address, filter) {
+  const who = address.toLowerCase();
+  const account = mandateAccount(who);
+  if (!V.delegations?.[who] || !account) return false;
+  const mint = account.available > 0;
+  const held = who !== V.master?.toLowerCase() && account.held > 0;
+  return filter === "mint" ? mint : filter === "held" ? held : mint || held;
+}
+
+function selectableRows(rows = rosterRows()) {
+  const roster = new Set(rows.map((r) => r.who.toLowerCase()));
+  const extra = orderedSeats()
+    .filter((s) => !roster.has(s.address.toLowerCase()) && canGatherMandate(s.address))
+    .map((s) => ({who: s.address, label: s.label, nftOnly: true}));
+  return rows.concat(extra);
+}
+
+function renderMandates() {
+  $("mandatePanel").hidden = V.locked || !V.config;
+  const account = mandateAccount(V.master);
+  const rewards = V.mandates?.rewards?.period ? V.mandates.rewards : null;
+  const unavailable = acting || V.locked || !!V.busy || !!V.batch?.running;
+  put("mandateHeld", account?.held ?? "—");
+  put("mandateAvailable", account?.available ?? "—");
+  put("mandateAmount", rewards ? rewards.amount + " fLGNS" : "—");
+  put("todayWins", V.todayWins ?? (V.todayError ? "查询失败" : "—"));
+  $("todayWins").title = V.todayError || "当前累计盟主次数减去北京时间零点前的累计次数";
+  const note = V.balanceError || V.mandateError || (account?.awaitingClaim ? `主号有 ${account.awaitingClaim} 笔甲子俸已满 60 天，领完俸禄后可 Mint。` : "");
+  $("mandateSchedule").hidden = !note;
+  put("mandateSchedule", note);
+  const end = rewards && new Date((rewards.deadline - 1) * 1000).toLocaleString("zh-CN", {timeZone: "Asia/Singapore", hourCycle: "h23"});
+  put("rewardSchedule", rewards ? `第 ${rewards.period} 期 · 主号当前有 ${rewards.count} 枚可领奖 · 新加坡时间 ${end} 截止` : V.mandates?.rewardError ? "福泽查询失败：" + V.mandates.rewardError : "");
+  $("btnRefresh").disabled = unavailable;
+  $("btnStopMandates").hidden = !V.batch?.running || !["铸造并归集盟主令", "主号领取福泽"].includes(V.busy);
+  $("btnClaimMandates").disabled = unavailable || !V.config || !!V.balanceError || !rewards?.count;
+}
+
 function render() {
   if (!V || selectionDrag) return;
   const locked = V.locked;
+  renderMandates();
   put("balanceStatus", V.balanceError
     ? `余额刷新失败，当前显示上次快照（${V.balancesUpdated || "尚无成功记录"}），请勿当作实时余额`
-    : V.balancesUpdated ? `链上余额快照：${V.balancesUpdated}${V.batch?.running ? " · 每笔确认后更新" : ""}` : "等待读取链上余额", V.balanceError ? "bad" : "dim");
+    : V.balancesUpdated ? `余额与入场状态 ${V.balancesUpdated}${V.detailsUpdated ? " · 盟主与 NFT 查询 " + V.detailsUpdated + (V.mandateError ? "（待 Mint 查询失败）" : "") : ""}` : "等待读取链上余额", V.balanceError ? "bad" : "dim");
   hydratePreferences();
 
   put("net", V.net || "—", "chip " + (V.net ? "ok" : ""));
@@ -424,6 +473,7 @@ function render() {
   }
 
   const rows = rosterRows();
+  const selectable = selectableRows(rows);
   const seats = orderedSeats();
   const inRoster = new Set(rows.map((r) => r.who.toLowerCase()));
   const delegated = V.delegations || {};
@@ -445,11 +495,12 @@ function render() {
     .map((s, i) => {
       const isM = s.kind === "master";
       const low = s.address.toLowerCase();
-      return groupHeading(s.address, seats[i - 1]?.address, "setup", 6) + `<tr>
+      return groupHeading(s.address, seats[i - 1]?.address, "setup", 7) + `<tr>
       <td><div class="chk account-name"><input type="checkbox" class="delegate-pick" data-a="${esc(s.address)}"${setupPicked.has(low) ? " checked" : ""}${prepBusy ? " disabled" : ""} aria-label="选择账号 ${i + 1}" /><span class="nm">${i + 1}. ${esc(s.label)}</span></div>${addressHTML(s.address)}</td>
       <td data-label="身份"><span class="pill ${isM ? "ok" : "dim"}">${isM ? "主号" : "队员"}</span></td>
       <td data-label="在名册">${inRoster.has(low) ? yes : no}</td>
       <td data-label="已委托" title="${esc(V.delegationError || '是否委托到当前合约，与加入名册无关')}">${delegated[low] === true ? yes : delegated[low] === false ? no : `<span class="pill dim">${V.delegationError ? '读取失败' : '待核对'}</span>`}</td>
+      <td data-label="待 Mint">${mandateCell(s.address)}</td>
       <td class="mentor" data-label="链上师父">${mentorText(s.address)}</td>
       <td class="act"><button class="mini seatrename" data-a="${esc(s.address)}"${acting || V.busy || V.batch?.running ? " disabled" : ""}>改名</button> <button class="mini seatrm" data-a="${esc(s.address)}">删</button></td>
     </tr>`;
@@ -460,7 +511,7 @@ function render() {
   if (locked) blocked = "密钥锁着 → 去「设置」解锁";
   else if (!V.contract) blocked = "还没连上合约 → 去「设置」载入或部署";
   else if (!V.masterReady) blocked = "主号还没委托 → 去「设置」点「① 委托」";
-  else if (!rows.length)
+  else if (!selectable.length)
     blocked = "名册是空的 → 去「设置」导入队员，再点「② 加入名册」";
   $("playBlocked").hidden = !blocked;
   $("playBlocked").textContent = blocked;
@@ -469,6 +520,8 @@ function render() {
   const bt = V.batch || {};
   $("btnRun").hidden = !!bt.running;
   $("btnReapAll").hidden = !!bt.running;
+  $("btnGatherMandates").hidden = !!bt.running;
+  $("btnRun").disabled = !!blocked || !!bt.running || !!V.busy || acting || !rows.length;
   $("btnSweepGas").hidden = !!bt.running;
   $("btnFund").disabled = !!blocked || !!bt.running || !!V.busy || acting;
   $("fundAmount").disabled = !!bt.running || !!V.busy || acting;
@@ -523,30 +576,39 @@ function render() {
         "#segRounds button, button[data-pick], input.ck, #ckAll, #btnPickRange, #pickFrom, #pickTo",
       )
       .forEach((el) => (el.disabled = running));
+    for (const filter of ["mint", "held"]) {
+      document.querySelector(`button[data-pick="${filter}"]`).disabled = running || !!V.balanceError || !V.mandates;
+    }
   }
   if (blocked) return;
 
   $("masterStandalone").hidden = $("cbMasterPlays").checked || rows.some((r) => r.who.toLowerCase() === (V.master || "").toLowerCase());
-  setHTML("masterStandalone", `主号 · 不参加比赛　${addressHTML(V.master)}　盟主 ${esc(V.masterChampionships ?? "—")} 次　fLGNS ${esc(V.overview?.masterBalance || "—")}　Gas ${esc(V.overview?.masterGas || "—")}`);
+  setHTML("masterStandalone", `主号 · 不参加比赛　${addressHTML(V.master)}　盟主 ${esc(V.masterChampionships ?? (V.championshipsError ? "待重试" : "查询中"))} 次　fLGNS ${esc(V.overview?.masterBalance || "—")}　Gas ${esc(V.overview?.masterGas || "—")}`);
   const ov = V.overview;
   if (ov) {
     put("mBal", ov.masterBalance, "v jade");
     put("mGas", ov.masterGas, "v");
     put("round", ov.roundId, "v");
   }
-  updatePickInfo();
+  updatePickInfo(selectable);
 
   const sum = rows.reduce((n, r) => n + Number(r.ready || 0), 0);
   put("sumTotal", sum.toFixed(2), "v " + (sum > 0 ? "jade" : "faint"));
-  put("seats", `${rows[0].openSeats}/${rows[0].seats}`, "v");
+  put("seats", rows.length ? `${rows[0].openSeats}/${rows[0].seats}` : "—", "v");
 
-  setHTML("rows", rows
+  setHTML("rows", selectable
     .map((r, index) => {
-      const heading = groupHeading(r.who, rows[index - 1]?.who, "play", 11);
+      const heading = r.nftOnly
+        ? (index === rows.length ? '<tr class="group-heading"><td colspan="12"><strong>名册外可 Mint 或归集的账号</strong></td></tr>' : "")
+        : groupHeading(r.who, selectable[index - 1]?.who, "play", 12);
       const on = isPicked(r.who);
       const ck = `<td class="pk"><input type="checkbox" class="ck" aria-label="选择第 ${index + 1} 个账号" data-a="${r.who}"${on ? " checked" : ""}${bt.running || V.busy ? " disabled" : ""}></td>`;
       const who = `<div class="nm">${index + 1}. ${esc(r.label || short(r.who))}${r.who.toLowerCase() === (V.master || "").toLowerCase() ? " · 主号" : ""}</div>${addressHTML(r.who, true)}`;
-      const championships = `<td data-label="盟主次数" class="n championships" title="${esc(r.championships == null ? V.championshipsError || '等待读取盟主次数' : '累计已裁决的盟主次数')}">${esc(r.championships ?? "—")}</td>`;
+      const nft = `<td data-label="待 Mint / 已持有" class="n">${mandateCell(r.who)}<small>已持有 ${mandateCell(r.who, "held")}</small></td>`;
+      if (r.nftOnly) {
+        return heading + `<tr class="${on ? "on" : ""}">${ck}<td class="identity">${who}</td><td class="status" data-label="状态">名册外</td><td colspan="2"></td>${nft}<td colspan="6"></td></tr>`;
+      }
+      const championships = `<td data-label="盟主次数（今日新增）" class="n championships"><span title="${esc(V.championshipsError || '累计盟主次数（今日新增）')}">${esc(r.championships ?? (V.championshipsError ? "待重试" : "查询中"))}（${r.todayWins == null ? "—" : "+" + esc(r.todayWins)}）</span><small title="甲子俸满 60 个有效日即为完全释放，包含已领俸或已 Mint 的记录">已完全释放 ${mandateCell(r.who, "completed")}</small></td>${nft}`;
       if (!r.delegated) {
         return heading + `<tr>${ck}<td class="identity">${who}</td><td class="status" data-label="状态"><span class="pill no">未委托</span></td>
           <td data-label="场次" class="n">—</td>${championships}
@@ -585,9 +647,9 @@ function render() {
     .join(""));
 }
 
-function updatePickInfo() {
-  const rows = rosterRows();
+function updatePickInfo(rows = selectableRows()) {
   const on = rows.filter((r) => isPicked(r.who));
+  $("btnGatherMandates").disabled = acting || V.locked || !!V.busy || !!V.batch?.running || !!V.balanceError || !V.masterReady || !on.some((r) => canGatherMandate(r.who));
 
   put(
     "pickInfo",
@@ -696,7 +758,7 @@ function wire() {
     act(e.target, "/api/delegate", { addresses });
   };
   $("btnDelegateAll").onclick = (e) =>
-    act(e.target, "/api/delegate", { addresses: [] }, `委托全部 ${orderedSeats().length} 个账号？已成功委托的会跳过。`);
+    act(e.target, "/api/delegate", { addresses: selectedSetupAddresses(true, true) }, `委托全部 ${orderedSeats().length} 个账号？已成功委托的会跳过。`);
   $("btnRevokeDelegate").onclick = (e) => {
     const addresses = selectedSetupAddresses();
     if (!addresses.length) return alert("请先选择要取消委托的账号");
@@ -712,12 +774,12 @@ function wire() {
     render();
   };
   const addToRoster = async (btn, all) => {
-    const addresses = all ? [] : selectedSetupAddresses($("cbMasterPlays").checked);
-    if (!all && !addresses.length)
+    const addresses = selectedSetupAddresses($("cbMasterPlays").checked, all);
+    if (!addresses.length)
       return alert("请先选择要加入名册的账号；主号仅在开启「主号参加比赛」时加入");
     try {
       await savePreferences();
-      await act(btn, "/api/roster/add", { addresses }, all ? "把全部适用账号加入名册？主号是否加入取决于「主号参加比赛」设置。" : undefined);
+      await act(btn, "/api/roster/add", { addresses }, all ? `把这 ${addresses.length} 个账号加入名册？` : undefined);
     } catch (e) {
       alert(e.message);
     }
@@ -783,6 +845,28 @@ function wire() {
     );
   };
 
+  $("btnStopMandates").onclick = (e) => act(e.currentTarget, "/api/batch/stop");
+  $("btnRefresh").onclick = (e) => act(e.currentTarget, "/api/refresh");
+  $("btnGatherMandates").onclick = (e) => {
+    const who = selectableRows().filter((r) => isPicked(r.who) && canGatherMandate(r.who)).map((r) => r.who);
+    if (!who.length) return;
+    let mint = 0, held = 0, sweep = 0, transactions = 0;
+    for (const address of who) {
+      const a = mandateAccount(address);
+      const member = address.toLowerCase() !== V.master.toLowerCase();
+      mint += a.available;
+      if (member) {
+        held += a.held;
+        sweep += a.held + a.available;
+      }
+      transactions += Math.ceil((a.available + (member ? a.held : 0)) / 24);
+    }
+    act(e.currentTarget, "/api/mandates/gather", {who, revision: V.mandates.revision}, `处理勾选中的 ${who.length} 个地址，Mint ${mint} 枚。队员共归集 ${sweep} 枚盟主令到主号 ${V.master}，其中已有 ${held} 枚。每批最多 48 个地址，主号支付 Gas，最多 ${transactions} 笔交易。`);
+  };
+  $("btnClaimMandates").onclick = (e) => {
+    const r = V.mandates.rewards;
+    act(e.currentTarget, "/api/mandates/claim", {revision: V.mandates.revision}, `主号领取第 ${r.period} 期福泽？本次共 ${r.count} 枚可领，合计 ${r.amount} fLGNS。`);
+  };
   $("btnReapAll").onclick = (e) => {
     const who = actionSelection();
     if (!who.length) return alert("请先选择账号");
@@ -794,14 +878,14 @@ function wire() {
       e.target,
       "/api/batch/harvest",
       { who },
-      `把 ${rows.length} 个号的钱收回主号？\n\n现在可收 ${sum.toFixed(2)}。\n会领取甲子俸、师徒收益、擂台回款，并把钱包全部可用 fLGNS 转回主号。\n只处理勾选地址；结算有积压或甲子俸跨页时可能发送多笔交易。`,
+      `把 ${rows.length} 个号的钱收回主号？\n\n现在可收 ${sum.toFixed(2)}。\n会领取甲子俸、师徒收益、擂台回款，并把钱包全部可用 fLGNS 转回主号。\n按勾选顺序每批最多处理 48 个地址。结算有积压或甲子俸跨页时可能发送多笔交易。`,
     );
   };
 
   $("pickInfo").parentElement.addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-pick]");
     if (!b) return;
-    const rows = rosterRows();
+    const rows = selectableRows();
     const key = (a) => a.toLowerCase();
     allSelected = b.dataset.pick === "all";
     switch (b.dataset.pick) {
@@ -814,12 +898,17 @@ function wire() {
       case "idle":
         picked.clear();
         rows
-          .filter((r) => !r.seated && r.matchesToday < 12)
+          .filter((r) => !r.nftOnly && !r.seated && r.matchesToday < 12)
           .forEach((r) => picked.add(key(r.who)));
         break;
       case "ready":
         picked.clear();
         rows.filter((r) => r.canHarvest).forEach((r) => picked.add(key(r.who)));
+        break;
+      case "mint":
+      case "held":
+        picked.clear();
+        rows.filter((r) => canGatherMandate(r.who, b.dataset.pick)).forEach((r) => picked.add(key(r.who)));
         break;
       case "firstN": {
         const n = Math.max(1, Number($("pickN").value) || 1);
@@ -834,7 +923,7 @@ function wire() {
 
   $("btnPickRange").onclick = () => {
     if (acting || V?.busy || V?.batch?.running) return;
-    const rows = rosterRows(),
+    const rows = selectableRows(),
       from = Number($("pickFrom").value),
       to = Number($("pickTo").value);
     if (
@@ -872,7 +961,7 @@ function wire() {
       end: a,
       checked: !ck.checked,
       base: new Set(
-        rosterRows()
+        selectableRows()
           .filter((r) => isPicked(r.who))
           .map((r) => r.who.toLowerCase()),
       ),
@@ -958,7 +1047,7 @@ function wire() {
       }
       const a = ck.dataset.a.toLowerCase();
       const base = new Set(
-        rosterRows()
+        selectableRows()
           .filter((r) => isPicked(r.who))
           .map((r) => r.who.toLowerCase()),
       );
@@ -1027,8 +1116,10 @@ function wire() {
   });
 }
 
+let tickInFlight = false;
 async function tick() {
-  if (selectionDrag) return;
+  if (selectionDrag || tickInFlight) return;
+  tickInFlight = true;
   try {
     V = await api("/api/state");
     if (acting) { renderLog(); return; }
@@ -1036,7 +1127,7 @@ async function tick() {
     if (tab === "setup" && !V.locked) loadMentors();
   } catch {
     put("lockState", "读不到", "chip no");
-  }
+  } finally { tickInFlight = false; }
 }
 
 window.addEventListener("load", async () => {
@@ -1045,9 +1136,11 @@ window.addEventListener("load", async () => {
   showTab(tab);
   await tick();
   if (V?.locked || !V?.hasVault) showTab("setup");
-  setInterval(() => {
-    if (!document.hidden) tick();
-  }, 1000);
+  async function poll() {
+    if (!document.hidden) await tick();
+    setTimeout(poll, acting || V?.busy || V?.batch?.running ? 1000 : 5000);
+  }
+  setTimeout(poll, 5000);
 });
 
 function renderSources() {

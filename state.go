@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"maps"
 	"sync"
@@ -34,10 +35,15 @@ type Line struct {
 }
 
 type View struct {
+	Mandates            *MandateSnapshot    `json:"mandates,omitempty"`
+	MandateError        string              `json:"mandateError,omitempty"`
+	TodayWins           *uint64             `json:"todayWins"`
+	TodayError          string              `json:"todayError,omitempty"`
 	ChampionshipsError  string              `json:"championshipsError,omitempty"`
 	MasterChampionships *string             `json:"masterChampionships"`
 	SystemName          string              `json:"systemName"`
 	DataDir             string              `json:"dataDir"`
+	DetailsUpdated      string              `json:"detailsUpdated,omitempty"`
 	BalancesUpdated     string              `json:"balancesUpdated,omitempty"`
 	BalanceError        string              `json:"balanceError,omitempty"`
 	VaultPath           string              `json:"vaultPath"`
@@ -68,10 +74,11 @@ type View struct {
 }
 
 type State struct {
-	closing bool
-	mu      sync.RWMutex
-	v       View
-	logs    []Line
+	idleReadCancel context.CancelFunc
+	closing        bool
+	mu             sync.RWMutex
+	v              View
+	logs           []Line
 }
 
 func NewState() *State {
@@ -111,11 +118,30 @@ func (s *State) Logf(kind, format string, args ...any) {
 	}
 }
 
+func (s *State) beginIdleRead(parent context.Context) (context.Context, func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closing || s.v.Busy != "" || s.idleReadCancel != nil {
+		return nil, nil
+	}
+	ctx, cancel := context.WithTimeout(parent, 75*time.Second)
+	s.idleReadCancel = cancel
+	return ctx, func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		cancel()
+		s.idleReadCancel = nil
+	}
+}
+
 func (s *State) TryBusy(what string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closing || s.v.Busy != "" {
 		return false
+	}
+	if s.idleReadCancel != nil {
+		s.idleReadCancel()
 	}
 	s.v.Busy = what
 	return true
@@ -137,4 +163,7 @@ func (s *State) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closing = true
+	if s.idleReadCancel != nil {
+		s.idleReadCancel()
+	}
 }

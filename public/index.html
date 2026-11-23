@@ -26,6 +26,22 @@
     <main class="workspace">
       <div class="workspace-content">
         <div id="tab-play">
+          <section id="mandatePanel" class="panel" hidden>
+            <div class="hero-t">主号盟主令</div>
+            <div class="stats">
+              <div class="stat"><div class="k">主号持有</div><div class="v" id="mandateHeld">—</div></div>
+              <div class="stat"><div class="k">主号待 Mint</div><div class="v" id="mandateAvailable">—</div></div>
+              <div class="stat"><div class="k">主号可领福泽</div><div class="v jade" id="mandateAmount">—</div></div>
+              <div class="stat"><div class="k">今日新增盟主 · 全部本地账号</div><div class="v" id="todayWins">—</div></div>
+            </div>
+            <p id="mandateSchedule" class="dim" hidden></p>
+            <p id="rewardSchedule" class="dim"></p>
+            <div class="ops">
+              <button id="btnClaimMandates">主号领取福泽</button>
+              <button id="btnRefresh" title="更新名册、委托、余额、入场状态、可收收益、盟主统计、盟主令持仓及主号福泽">刷新链上数据</button>
+              <button id="btnStopMandates" hidden>停止后续交易</button>
+            </div>
+          </section>
           <div id="playBlocked" class="big-hint" hidden></div>
 
           <div id="playBody" hidden>
@@ -45,6 +61,7 @@
                   <div class="ops" style="margin: 0">
                     <button id="btnRun" class="go">开跑</button>
                     <button id="btnReapAll">领取收益并归集</button>
+                    <button id="btnGatherMandates">一键 Mint 并归集到主号</button>
                     <button id="btnSweepGas">收 gas 币</button>
                     <button id="btnStop" class="cut" hidden>停止</button>
                   </div>
@@ -60,6 +77,8 @@
                 <button class="lnk" data-pick="none">全不选</button>
                 <button class="lnk" data-pick="idle">只选空闲的</button>
                 <button class="lnk" data-pick="ready">只选有钱可收的</button>
+                <button class="lnk" data-pick="mint" title="选择已委托且有盟主令可 Mint 的账号">只选可 Mint 的</button>
+                <button class="lnk" data-pick="held" title="选择已委托且钱包里持有盟主令的队员">只选有 NFT 的</button>
                 <span class="sep"></span>
                 <span>选前</span>
                 <input type="number" id="pickN" value="24" min="1" max="500" />
@@ -162,7 +181,8 @@
                       <th>序号 / 账号</th>
                       <th>状态</th>
                       <th>场次</th>
-                      <th title="累计已裁决的盟主次数">盟主次数</th>
+                      <th class="championships">盟主次数（今日新增）<br>已完全释放</th>
+                      <th>待 Mint<br>已持有</th>
                       <th>钱包</th>
                       <th>擂台</th>
                       <th>师承</th>
@@ -467,7 +487,8 @@
                       <th>身份</th>
                       <th>在名册</th>
                       <th>已委托</th>
-                      <th>链上师父</th>
+                      <th>待 Mint</th>
+                      <th class="mentor">链上师父</th>
                       <th>操作</th>
                     </tr>
                   </thead>

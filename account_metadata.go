@@ -120,26 +120,20 @@ func (s *Server) handleMentors(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	result := map[string]string{}
 
-	for start := 0; start < len(seats); start += 100 {
-		end := start + 100
-		if end > len(seats) {
-			end = len(seats)
+	data := make([][]byte, len(seats))
+	for i, seat := range seats {
+		data[i], _ = extraReadABI.Pack("masterOf", common.HexToAddress(seat.Address))
+	}
+	out, errs := s.chain.CallBatch(ctx, Mainnet.Lineage, data)
+	for i, seat := range seats {
+		if errs[i] != nil {
+			continue
 		}
-		data := make([][]byte, end-start)
-		for i, seat := range seats[start:end] {
-			data[i], _ = extraReadABI.Pack("masterOf", common.HexToAddress(seat.Address))
+		v, err := extraReadABI.Unpack("masterOf", out[i])
+		if err != nil {
+			continue
 		}
-		out, errs := s.chain.CallBatch(ctx, Mainnet.Lineage, data)
-		for i, seat := range seats[start:end] {
-			if errs[i] != nil {
-				continue
-			}
-			v, err := extraReadABI.Unpack("masterOf", out[i])
-			if err != nil {
-				continue
-			}
-			result[strings.ToLower(seat.Address)] = v[0].(common.Address).Hex()
-		}
+		result[strings.ToLower(seat.Address)] = v[0].(common.Address).Hex()
 	}
 	s.writeJSON(w, 200, result)
 }

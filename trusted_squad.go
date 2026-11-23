@@ -28,9 +28,17 @@ func trustedRuntime(cfg *Config) []byte {
 	}
 	return code
 }
-func verifySquadCode(code []byte, cfg *Config, addr, master common.Address) error {
+
+func verifySquadConfig(cfg *Config, addr, master common.Address) error {
 	if cfg.Impl != addr || cfg.Master != master || cfg.Arena != Mainnet.Arena || cfg.Token != Mainnet.Token || cfg.Lineage != Mainnet.Lineage || cfg.GasToken != Mainnet.GasToken || cfg.Shifu == (common.Address{}) {
 		return fmt.Errorf("合约配置与当前主号、游戏或委托目标不一致，拒绝使用")
+	}
+	return nil
+}
+
+func verifySquadCode(code []byte, cfg *Config, addr, master common.Address) error {
+	if err := verifySquadConfig(cfg, addr, master); err != nil {
+		return err
 	}
 	if !bytes.Equal(code, trustedRuntime(cfg)) {
 		return fmt.Errorf("合约代码不属于本版本可信 Squad，禁止委托。旧版请先部署新版，再重新委托；账户和战绩保留")

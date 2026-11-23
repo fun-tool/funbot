@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"slices"
 	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
+
+const gatherGroupSize = 48
 
 type Plan struct {
 	EntryMode string
@@ -281,7 +284,6 @@ func (b *Batch) loop(ctx context.Context, p Plan) {
 		}
 		b.set(func(pr *Progress) { pr.Entered += len(got) })
 		b.st.Logf("ok", "第 %d 笔：确认 %d/%d 个号入场（gas %d）", txs, len(got), len(preview.Who), rec.GasUsed)
-		b.refreshBalances()
 		if len(got) != len(preview.Who) {
 			b.set(func(pr *Progress) {
 				pr.Reason = "上链结果与模拟不同，已停止；请核对未入场账号后再操作"
@@ -355,49 +357,58 @@ func (b *Batch) harvest(ctx context.Context, who []common.Address) error {
 	defer func() {
 		b.set(func(pr *Progress) { pr.Harvested = fmtUnits(total) })
 	}()
+	pending := who
 	for pass := 1; pass <= 5; pass++ {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
 		b.run.ks.Touch()
 		before, berr := sq.Overview(ctx)
-		rec, err := sq.HarvestSome(ctx, master, who)
-		if err == nil {
-			err = sq.HarvestJiaziPages(ctx, master, who)
+		var groupErr error
+		batchNo := 0
+		for group := range slices.Chunk(pending, gatherGroupSize) {
+			batchNo++
+			if groupErr = ctx.Err(); groupErr != nil {
+				break
+			}
+			rec, err := sq.HarvestSome(ctx, master, group)
+			if err != nil {
+				groupErr = err
+				break
+			}
+			b.st.Logf("ok", "fLGNS 第 %d 趟第 %d 批，%d 个地址（gas %d）", pass, batchNo, len(group), rec.GasUsed)
+			if groupErr = sq.HarvestJiaziPages(ctx, master, group); groupErr != nil {
+				break
+			}
 		}
 		after, aerr := sq.Overview(ctx)
-		if err != nil {
-			b.st.Logf("bad", "收集失败：%v", err)
-			return err
-		}
-
 		if berr == nil && aerr == nil && after.MasterWei.Cmp(before.MasterWei) > 0 {
 			total.Add(total, new(big.Int).Sub(after.MasterWei, before.MasterWei))
 		}
-		b.st.Logf("ok", "收集第 %d 趟：进主号 %s（gas %d）", pass, fmtUnits(total), rec.GasUsed)
+		if groupErr != nil {
+			return fmt.Errorf("收集第 %d 趟第 %d 批失败：%w", pass, batchNo, groupErr)
+		}
+		b.st.Logf("ok", "收集第 %d 趟完成：累计进主号 %s", pass, fmtUnits(total))
 
 		rctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-		refreshErr := b.run.Refresh(rctx)
+		refreshErr := b.run.refresh(rctx, refreshBalancesOnly)
 		cancel()
 		if refreshErr != nil {
 			return fmt.Errorf("交易已上链，但无法确认是否收干净：%w", refreshErr)
 		}
-		pick := map[common.Address]bool{}
-		for _, a := range who {
-			pick[a] = true
+		var left *big.Int
+		pending, left, err = remainingHarvest(who, b.st.Snapshot().Rows)
+		if err != nil {
+			return err
 		}
-		left := new(big.Int)
-		for _, row := range b.st.Snapshot().Rows {
-			if len(pick) > 0 && !pick[row.Who] {
-				continue
-			}
-			left.Add(left, row.Ready)
-		}
-		if left.Sign() == 0 {
+		if len(pending) == 0 {
 			b.st.Logf("ok", "收干净了，全部进主号")
 			return nil
 		}
-		b.st.Logf("", "还剩 %s 可收，再来一趟", fmtUnits(left))
+		if pass == 5 {
+			break
+		}
+		b.st.Logf("", "还剩 %d 个账号可收 %s，下一趟只补收这些账号", len(pending), fmtUnits(left))
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -405,6 +416,26 @@ func (b *Batch) harvest(ctx context.Context, who []common.Address) error {
 		}
 	}
 	return fmt.Errorf("收了 5 趟还有剩，请等结算后继续收集")
+}
+
+func remainingHarvest(selected []common.Address, rows []*Pulse) ([]common.Address, *big.Int, error) {
+	ready := make(map[common.Address]*big.Int, len(rows))
+	for _, row := range rows {
+		ready[row.Who] = row.Ready
+	}
+	var pending []common.Address
+	total := new(big.Int)
+	for _, addr := range selected {
+		amount := ready[addr]
+		if amount == nil {
+			return nil, nil, fmt.Errorf("缺少 %s 的刷新余额，无法确认是否收干净", short(addr))
+		}
+		if amount.Sign() > 0 {
+			pending = append(pending, addr)
+			total.Add(total, amount)
+		}
+	}
+	return pending, total, nil
 }
 
 func (b *Batch) finish() {

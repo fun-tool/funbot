@@ -86,7 +86,7 @@ func (c *Chain) checkPending(ctx context.Context) error {
 	var rec *types.Receipt
 	err = c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
 		var err error
-		rec, err = cl.TransactionReceipt(ctx, p.Hash)
+		rec, err = checkedReceipt(ctx, cl, p.Hash)
 		if err == ethereum.NotFound {
 			return nil
 		}
@@ -145,7 +145,7 @@ func (c *Chain) RecoverPending(ctx context.Context) error {
 	var nonce uint64
 	err = c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
 		var err error
-		receipt, err = cl.TransactionReceipt(ctx, p.Hash)
+		receipt, err = checkedReceipt(ctx, cl, p.Hash)
 		if err != nil && err != ethereum.NotFound {
 			return err
 		}

@@ -56,6 +56,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/derive", s.guard(s.handleDeriveSaved, true))
 	mux.HandleFunc("/api/vault/reload", s.guard(s.handleVaultReload, true))
 	mux.HandleFunc("/api/", http.NotFound)
+	mux.HandleFunc("/api/mandates/gather", s.guard(s.handleGatherMandates, true))
+	mux.HandleFunc("/api/mandates/claim", s.guard(s.handleClaimMandates, true))
+	mux.HandleFunc("/api/refresh", s.guard(s.handleRefresh, true))
 	mux.HandleFunc("/api/state", s.guard(s.handleState, false))
 	mux.HandleFunc("/api/unlock", s.guard(s.handleUnlock, true))
 	mux.HandleFunc("/api/lock", s.guard(s.handleLock, true))
@@ -395,11 +398,6 @@ func (s *Server) handleDelegate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(who) == 0 {
-		for _, m := range s.ks.Members() {
-			who = append(who, m.Address)
-		}
-	}
 	if err := s.busy("委托", func(ctx context.Context) error {
 		return s.run.Delegate(ctx, who)
 	}); err != nil {
@@ -421,16 +419,6 @@ func (s *Server) handleRosterAdd(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.fail(w, 400, err)
 		return
-	}
-	if len(who) == 0 {
-		if s.settings.Get().MasterPlays {
-			if m := s.ks.Master(); m != nil {
-				who = append(who, m.Address)
-			}
-		}
-		for _, m := range s.ks.Members() {
-			who = append(who, m.Address)
-		}
 	}
 	if err := s.busy("加入名册", func(ctx context.Context) error {
 		return s.run.AddMembers(ctx, who)
@@ -714,5 +702,55 @@ func (s *Server) handleRecoverTransaction(w http.ResponseWriter, r *http.Request
 		return
 	}
 	s.st.Logf("ok", "原交易已确认，请核对状态后继续")
+	s.ok(w)
+}
+
+func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
+	if s.ks.Locked() || !s.st.TryBusy("刷新链上数据") {
+		s.fail(w, 400, fmt.Errorf("请先解锁并等待当前操作结束"))
+		return
+	}
+	defer s.st.Idle()
+	ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
+	defer cancel()
+	if err := s.run.Refresh(ctx); err != nil {
+		s.fail(w, 400, err)
+		return
+	}
+	s.ok(w)
+}
+
+func (s *Server) handleGatherMandates(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		Who      []string    `json:"who"`
+		Revision common.Hash `json:"revision"`
+	}
+	if err := s.body(r, &b); err != nil {
+		s.fail(w, 400, err)
+		return
+	}
+	who, err := parseAddrs(b.Who)
+	if err == nil {
+		err = s.batch.startMandates(who, false, b.Revision)
+	}
+	if err != nil {
+		s.fail(w, 400, err)
+		return
+	}
+	s.ok(w)
+}
+
+func (s *Server) handleClaimMandates(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		Revision common.Hash `json:"revision"`
+	}
+	if err := s.body(r, &b); err != nil {
+		s.fail(w, 400, err)
+		return
+	}
+	if err := s.batch.startMandates(nil, true, b.Revision); err != nil {
+		s.fail(w, 400, err)
+		return
+	}
 	s.ok(w)
 }

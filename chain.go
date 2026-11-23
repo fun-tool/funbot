@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -50,13 +51,14 @@ func (c *Chain) GasPrice() *big.Int {
 	return new(big.Int).Set(c.gasPrice)
 }
 
-func (c *Chain) Dial(ctx context.Context) error {
+func (c *Chain) client(ctx context.Context) (*ethclient.Client, error) {
 	c.dialMu.Lock()
 	defer c.dialMu.Unlock()
-	if c.client() != nil {
-		return nil
-	}
 	c.mu.Lock()
+	if cl := c.c; cl != nil {
+		c.mu.Unlock()
+		return cl, nil
+	}
 	start := c.cur
 	c.mu.Unlock()
 	var last error
@@ -84,29 +86,20 @@ func (c *Chain) Dial(ctx context.Context) error {
 		c.mu.Lock()
 		c.c, c.cur = cl, i
 		c.mu.Unlock()
-		return nil
+		return cl, nil
 	}
-	return fmt.Errorf("三个节点都连不上或链不对：%w", last)
-}
-
-func (c *Chain) client() *ethclient.Client {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.c
+	return nil, fmt.Errorf("三个节点都连不上或链不对：%w", last)
 }
 
 func (c *Chain) retry(ctx context.Context, fn func(context.Context, *ethclient.Client) error) error {
 	var last error
 	for attempt := 0; attempt < len(c.rpcs)*2; attempt++ {
-		cl := c.client()
-		if cl == nil {
-			if err := c.Dial(ctx); err != nil {
-				return err
-			}
-			cl = c.client()
+		cl, err := c.client(ctx)
+		if err != nil {
+			return err
 		}
 		attemptCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		err := fn(attemptCtx, cl)
+		err = fn(attemptCtx, cl)
 		cancel()
 		if err == nil {
 			return nil
@@ -174,18 +167,6 @@ func (c *Chain) CallBatch(ctx context.Context, to common.Address, datas [][]byte
 func (c *Chain) CallBatchAt(ctx context.Context, to common.Address, datas [][]byte, block string) ([][]byte, []error) {
 	out := make([][]byte, len(datas))
 	errs := make([]error, len(datas))
-	if len(datas) > 80 {
-		for start := 0; start < len(datas); start += 80 {
-			end := min(start+80, len(datas))
-			values, failures := c.CallBatchAt(ctx, to, datas[start:end], block)
-			copy(out[start:end], values)
-			copy(errs[start:end], failures)
-		}
-		return out, errs
-	}
-	if len(datas) == 0 {
-		return out, errs
-	}
 	reqs := make([]rpc.BatchElem, len(datas))
 	results := make([]hexutil.Bytes, len(datas))
 	for i, d := range datas {
@@ -198,15 +179,7 @@ func (c *Chain) CallBatchAt(ctx context.Context, to common.Address, datas [][]by
 			Result: &results[i],
 		}
 	}
-	err := c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
-		return cl.Client().BatchCallContext(ctx, reqs)
-	})
-	if err != nil {
-		for i := range errs {
-			errs[i] = err
-		}
-		return out, errs
-	}
+	c.readBatch(ctx, reqs)
 	for i := range reqs {
 		if reqs[i].Error != nil {
 			errs[i] = reqs[i].Error
@@ -215,6 +188,22 @@ func (c *Chain) CallBatchAt(ctx context.Context, to common.Address, datas [][]by
 		out[i] = results[i]
 	}
 	return out, errs
+}
+
+func (c *Chain) readBatch(ctx context.Context, reqs []rpc.BatchElem) {
+	for batch := range slices.Chunk(reqs, 80) {
+		err := ctx.Err()
+		if err == nil {
+			err = c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
+				return cl.Client().BatchCallContext(ctx, batch)
+			})
+		}
+		if err != nil {
+			for i := range batch {
+				batch[i].Error = err
+			}
+		}
+	}
 }
 
 func (c *Chain) Call(ctx context.Context, to common.Address, data []byte) ([]byte, error) {
@@ -249,30 +238,46 @@ func (c *Chain) broadcast(ctx context.Context, tx *types.Transaction) error {
 	})
 }
 
+var errGasCapacity = errors.New("整批所需 Gas 超过区块上限，请减少选择的账号")
+
+func (c *Chain) estimateCallGas(ctx context.Context, from, to common.Address, data []byte, floors ...uint64) (uint64, error) {
+	var estimated uint64
+	var head *types.Header
+	err := c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
+		var err error
+		head, err = cl.HeaderByNumber(ctx, nil)
+		if err != nil {
+			return err
+		}
+		estimated, err = cl.EstimateGas(ctx, ethereum.CallMsg{From: from, To: &to, Data: data, GasPrice: c.GasPrice()})
+		return err
+	})
+	if err != nil {
+		return 0, fmt.Errorf("整批交易预估失败，未广播：%w", explainCallError(err))
+	}
+	if estimated == 0 {
+		return 0, fmt.Errorf("节点返回零 Gas 预估")
+	}
+	if estimated > head.GasLimit || estimated/5 > head.GasLimit-estimated {
+		return 0, errGasCapacity
+	}
+	gas := estimated + estimated/5
+
+	if len(floors) > 0 && gas < floors[0] {
+		gas = floors[0]
+	}
+	if gas > head.GasLimit {
+		return 0, errGasCapacity
+	}
+	return gas, nil
+}
+
 func (c *Chain) SendCall(ctx context.Context, from *Seat, to common.Address, data []byte, gas uint64, floors ...uint64) (*types.Receipt, error) {
 	if gas == 0 {
-
-		var estimated uint64
-		var head *types.Header
-		err := c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
-			var err error
-			head, err = cl.HeaderByNumber(ctx, nil)
-			if err != nil {
-				return err
-			}
-			estimated, err = cl.EstimateGas(ctx, ethereum.CallMsg{From: from.Address, To: &to, Data: data, GasPrice: c.GasPrice()})
-			return err
-		})
+		var err error
+		gas, err = c.estimateCallGas(ctx, from.Address, to, data, floors...)
 		if err != nil {
-			return nil, fmt.Errorf("整批交易预估失败，未广播：%w", explainCallError(err))
-		}
-		gas = estimated + estimated/5
-
-		if len(floors) > 0 && gas < floors[0] {
-			gas = floors[0]
-		}
-		if gas > head.GasLimit {
-			return nil, fmt.Errorf("整批所需 gas 超过区块上限，请减少选择的账号")
+			return nil, err
 		}
 	}
 	nonce, err := c.PendingNonce(ctx, from.Address)
@@ -300,12 +305,20 @@ func (c *Chain) SendCall(ctx context.Context, from *Seat, to common.Address, dat
 	return c.WaitReceipt(wctx, signed.Hash())
 }
 
+func checkedReceipt(ctx context.Context, cl *ethclient.Client, hash common.Hash) (*types.Receipt, error) {
+	rec, err := cl.TransactionReceipt(ctx, hash)
+	if err == nil && (rec == nil || rec.TxHash != hash) {
+		return nil, fmt.Errorf("节点回执与请求的交易 %s 不一致", hash)
+	}
+	return rec, err
+}
+
 func (c *Chain) WaitReceipt(ctx context.Context, h common.Hash) (*types.Receipt, error) {
 	deadline := time.Now().Add(txWait)
 	for {
 		var rec *types.Receipt
 		err := c.retry(ctx, func(ctx context.Context, cl *ethclient.Client) error {
-			r, err := cl.TransactionReceipt(ctx, h)
+			r, err := checkedReceipt(ctx, cl, h)
 			if err == ethereum.NotFound {
 				return nil
 			}
@@ -351,8 +364,11 @@ func isRevert(err error) bool {
 }
 
 func alreadyInFlight(err error) bool {
-	m := err.Error()
-	for _, k := range []string{"already known", "already imported", "known transaction"} {
+	m := strings.ToLower(strings.TrimSpace(err.Error()))
+	if m == "known transaction" || strings.HasPrefix(m, "known transaction:") {
+		return true
+	}
+	for _, k := range []string{"already known", "already imported"} {
 		if containsFold(m, k) {
 			return true
 		}

@@ -5,22 +5,20 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Squad struct {
-	chain     *Chain
-	impl      common.Address
-	acct      common.Address
-	abi       abi.ABI
-	champMu   sync.Mutex
-	champHead *types.Header
-	champions map[common.Address]championHistory
+	chain *Chain
+	impl  common.Address
+	acct  common.Address
+	abi   abi.ABI
+	daily dailyWinsCache
 }
 
 type Config struct {
@@ -34,6 +32,7 @@ type Config struct {
 }
 
 type Pulse struct {
+	TodayWins     *uint64        `json:"todayWins"`
 	Championships *string        `json:"championships"`
 	Who           common.Address `json:"who"`
 	Label         string         `json:"label"`
@@ -133,6 +132,10 @@ func (s *Squad) Overview(ctx context.Context) (*Overview, error) {
 	if err != nil {
 		return nil, err
 	}
+	return decodeOverview(v), nil
+}
+
+func decodeOverview(v []any) *Overview {
 	u := func(i int) uint64 {
 		if b, ok := v[i].(*big.Int); ok {
 			return b.Uint64()
@@ -149,7 +152,7 @@ func (s *Squad) Overview(ctx context.Context) (*Overview, error) {
 		Total: u(0), Upgraded: u(1), RoundID: u(2), DayID: u(3),
 		MasterBalance: fmtUnits(b(4)), MasterGas: fmtUnits(b(5)),
 		MasterWei: b(4),
-	}, nil
+	}
 }
 
 func (s *Squad) Members(ctx context.Context) ([]common.Address, error) {
@@ -161,7 +164,7 @@ func (s *Squad) Members(ctx context.Context) ([]common.Address, error) {
 	return out, nil
 }
 
-func (s *Squad) PulseBatch(ctx context.Context, who []common.Address) ([]*Pulse, []error) {
+func (s *Squad) PulseBatch(ctx context.Context, who []common.Address, tag string) ([]*Pulse, []error) {
 	datas := make([][]byte, len(who))
 	errs := make([]error, len(who))
 	for i, a := range who {
@@ -172,7 +175,7 @@ func (s *Squad) PulseBatch(ctx context.Context, who []common.Address) ([]*Pulse,
 		}
 		datas[i] = in
 	}
-	raws, callErrs := s.chain.CallBatch(ctx, s.acct, datas)
+	raws, callErrs := s.chain.CallBatchAt(ctx, s.acct, datas, tag)
 	out := make([]*Pulse, len(who))
 	for i := range who {
 		if errs[i] != nil {
@@ -391,15 +394,18 @@ func DeploySquad(ctx context.Context, c *Chain, master *Seat, net *Network, shif
 	if rec.Status == 0 {
 		return common.Address{}, fmt.Errorf("部署交易被回滚了：%s", signed.Hash().Hex())
 	}
-	if rec.ContractAddress == (common.Address{}) {
-		return common.Address{}, fmt.Errorf("回执里没有合约地址")
+	expected := crypto.CreateAddress(master.Address, signed.Nonce())
+	if rec.ContractAddress != expected {
+		return common.Address{}, fmt.Errorf("交易 %s 的部署回执地址与本地推导地址 %s 不一致", signed.Hash(), expected)
 	}
-	return rec.ContractAddress, nil
+	return expected, nil
 }
 
 var oneToken = new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
 
-func fmtUnits(v *big.Int) string {
+func fmtUnits(v *big.Int) string { return formatUnits(v, 4) }
+
+func formatUnits(v *big.Int, precision int) string {
 	if v == nil {
 		return "0"
 	}
@@ -411,7 +417,7 @@ func fmtUnits(v *big.Int) string {
 	for len(frac) < 18 {
 		frac = "0" + frac
 	}
-	frac = strings.TrimRight(frac[:4], "0")
+	frac = strings.TrimRight(frac[:precision], "0")
 	if frac == "" {
 		return q.String()
 	}

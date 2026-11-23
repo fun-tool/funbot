@@ -20,7 +20,6 @@ interface IArena {
         returns (JiaziRow[] memory rows, uint256 total);
     function jiaziCount(address owner) external view returns (uint256);
     function claimable(address player) external view returns (uint256);
-    function ENTRY_FEE() external view returns (uint256);
     function isSeated(uint256 roundId, address player) external view returns (bool);
     function currentRoundId() external view returns (uint256);
     function currentDayId() external view returns (uint256);
@@ -86,7 +85,90 @@ interface ILineage {
     function masterOf(address disciple) external view returns (address);
 }
 
+interface IMandate {
+    function mint(uint256[] calldata indices) external;
+    function used(address who, uint256 index) external view returns (bool);
+    function balanceOf(address who) external view returns (uint256);
+    function tokenOfOwnerByIndex(address who, uint256 index) external view returns (uint256);
+    function safeTransferFrom(address from, address to, uint256 id) external;
+    function ownedPage(address who, uint256 offset, uint256 limit) external view returns (uint256[] memory, uint256);
+}
+
+interface IMandateRewards {
+    function FIRST_CLAIM_END() external view returns (uint256);
+    function PERIOD() external view returns (uint256);
+    function claimDeadline(uint256 period) external view returns (uint256);
+    function rewardOf(uint256 period, uint256 id) external view returns (uint256, uint8);
+}
+
 contract Squad {
+    IMandate private constant MANDATE = IMandate(0xfffe850Fd170625A8F816a731B9B278Cc161AAAA);
+    IMandateRewards private constant REWARDS = IMandateRewards(0xfF1e7170c041c0E37bF9b9ce0FEEd600F3deaaaA);
+
+    function onERC721Received(address, address, uint256, bytes calldata) external view returns (bytes4) {
+        require(msg.sender == address(MANDATE) && address(this) != IMPL);
+        return this.onERC721Received.selector;
+    }
+
+    function mandatePage(address who, uint256 offset) external view returns
+        (uint256 mask, uint256 total, uint256 remaining, uint256 awaitingClaim, uint256 held)
+    {
+        (IArena.JiaziRow[] memory rows, uint256 count) = ARENA.jiaziPage(who, offset, JIAZI_PAGE);
+        total = count;
+        held = MANDATE.balanceOf(who);
+        remaining = 61;
+        for (uint256 i; i < rows.length; ++i) {
+            IArena.JiaziRow memory row = rows[i];
+            if (row.validDays < 60) {
+                uint256 daysLeft = 60 - row.validDays;
+                if (daysLeft < remaining) remaining = daysLeft;
+            } else if (row.claimedDays < 60) {
+                ++awaitingClaim;
+            } else if (!MANDATE.used(who, row.index)) {
+                mask |= uint256(1) << i;
+            }
+        }
+    }
+
+    function mandateRewardsPage(uint256 offset) external view returns
+        (uint256 period, uint256 deadline, uint256 total, uint256[] memory ids, uint256 amount)
+    {
+        uint256 end = REWARDS.FIRST_CLAIM_END();
+        period = block.timestamp < end ? 1 : 2 + (block.timestamp - end) / REWARDS.PERIOD();
+        deadline = REWARDS.claimDeadline(period);
+        (ids, total) = MANDATE.ownedPage(MASTER, offset, 32);
+        for (uint256 i; i < ids.length; ++i) {
+            (uint256 value, uint8 status) = REWARDS.rewardOf(period, ids[i]);
+            if (status == 2) amount += value;
+            else ids[i] = 0;
+        }
+    }
+
+    function gatherMandatesBatch(address[] calldata who, uint256[][] calldata indices, uint256[] calldata held)
+        external onlySelf
+    {
+        if (who.length == 0 || who.length > 48 || indices.length != who.length || held.length != who.length)
+            revert InvalidMandateBatch();
+        for (uint256 i; i < who.length; ++i) {
+            address account = who[i];
+            if (!isDelegated(account)) revert NotDelegated(account);
+            if (indices[i].length > 24 || (account != MASTER && MANDATE.balanceOf(account) != held[i]))
+                revert InvalidMandateBatch();
+            Squad(payable(account)).mintAndSweepMandates(indices[i]);
+        }
+    }
+
+    function mintAndSweepMandates(uint256[] calldata indices) external onlyMaster {
+        if (indices.length != 0) MANDATE.mint(indices);
+        if (address(this) == MASTER) return;
+        uint256 balance = MANDATE.balanceOf(address(this));
+        uint256 count = balance > 24 ? 24 : balance;
+        for (uint256 i; i < count; ++i) {
+            uint256 id = MANDATE.tokenOfOwnerByIndex(address(this), balance - 1 - i);
+            MANDATE.safeTransferFrom(address(this), MASTER, id);
+        }
+    }
+
     IArena public immutable ARENA;
     IERC20 public immutable TOKEN;
     ILineage public immutable LINEAGE;
@@ -110,6 +192,8 @@ contract Squad {
 
     uint256 public constant JIAZI_PAGE = 64;
 
+    uint256 private constant ENTRY_FEE = 100e18;
+
     uint256 public constant MAX_MATCHES_PER_DAY = 12;
 
     error NotMaster();
@@ -118,6 +202,7 @@ contract Squad {
     error NoMembers();
     error TransferFailed();
     error InvalidFunding();
+    error InvalidMandateBatch();
     error NotDelegated(address who);
 
     error CouldNotEnter(address who);
@@ -374,11 +459,10 @@ contract Squad {
         (, uint256 dayId, uint256 matches,) = ARENA.activityOf(k);
         if (dayId == ARENA.currentDayId() && matches >= MAX_MATCHES_PER_DAY) return (0, 0, false);
 
-        uint256 fee = ARENA.ENTRY_FEE();
-        if (k != MASTER && ARENA.claimable(k) < fee) {
+        if (k != MASTER && ARENA.claimable(k) < ENTRY_FEE) {
             uint256 available = TOKEN.balanceOf(k);
-            if (available < fee) {
-                funded = fee - available;
+            if (available < ENTRY_FEE) {
+                funded = ENTRY_FEE - available;
                 if (!TOKEN.transfer(k, funded)) revert TransferFailed();
             }
         }

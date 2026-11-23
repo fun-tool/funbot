@@ -2,24 +2,14 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
 )
-
-func (b *Batch) refreshBalances() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := b.run.Refresh(ctx); err != nil {
-		b.st.Logf("warn", "余额刷新失败，页面保留上次快照：%v", err)
-	}
-}
 
 func explainCallError(err error) error {
 	var dataError rpc.DataError

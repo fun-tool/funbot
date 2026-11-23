@@ -2,23 +2,32 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"slices"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type Runner struct {
-	settings *SettingsStore
-	mu       sync.Mutex
-	chain    *Chain
-	ks       *Keystore
-	st       *State
+	refreshMu   sync.Mutex
+	lastHead    *types.Header
+	lastSeats   []VaultMeta
+	lastDetails time.Time
+	detailsHead common.Hash
+	settings    *SettingsStore
+	mu          sync.Mutex
+	chain       *Chain
+	ks          *Keystore
+	st          *State
 
 	squad *Squad
 	cfg   *Config
@@ -29,6 +38,10 @@ func NewRunner(c *Chain, ks *Keystore, st *State) *Runner {
 }
 
 func (r *Runner) Attach(ctx context.Context, addr common.Address) error {
+	return r.attach(ctx, addr, common.Address{})
+}
+
+func (r *Runner) attach(ctx context.Context, addr, expectedShifu common.Address) error {
 	code, err := r.chain.CodeAt(ctx, addr)
 	if err != nil {
 		return err
@@ -50,15 +63,27 @@ func (r *Runner) Attach(ctx context.Context, addr common.Address) error {
 		return fmt.Errorf("读合约配置失败 —— 这个地址可能不是本程序的合约: %w", err)
 	}
 
+	if expectedShifu != (common.Address{}) && cfg.Shifu != expectedShifu {
+		return fmt.Errorf("合约师父与本次部署参数不一致")
+	}
 	if err := verifySquadCode(code, cfg, addr, master.Address); err != nil {
 		return err
 	}
 
+	r.refreshMu.Lock()
+	defer r.refreshMu.Unlock()
+	r.lastHead = nil
+	r.detailsHead = common.Hash{}
+	r.lastDetails = time.Time{}
 	r.mu.Lock()
 	r.squad, r.cfg = sq, cfg
 	r.mu.Unlock()
 	label := Mainnet.Label
 	r.st.Set(func(v *View) {
+		v.Mandates, v.TodayWins, v.Rows, v.Overview = nil, nil, nil, nil
+		v.BalancesUpdated, v.DetailsUpdated = "", ""
+		v.BalanceError, v.MandateError, v.TodayError, v.ChampionshipsError = "", "", "", ""
+		v.MasterChampionships = nil
 		v.Contract = addr.Hex()
 		v.Config = cfg
 		v.Net = label
@@ -100,127 +125,183 @@ func (r *Runner) Deploy(ctx context.Context, shifu common.Address) (common.Addre
 		return common.Address{}, err
 	}
 	r.st.Logf("ok", "合约部署在 %s", addr.Hex())
-	if err := r.Attach(ctx, addr); err != nil {
+	if err := r.attach(ctx, addr, shifu); err != nil {
 		return addr, err
 	}
 	return addr, nil
 }
 
-func (r *Runner) refreshDelegations(ctx context.Context) error {
-	cfg := r.Config()
-	var status map[string]bool
-	var err error
-	if cfg != nil && cfg.Impl != (common.Address{}) {
-		meta := r.ks.Meta()
-		seats := make([]*Seat, 0, len(meta))
-		for _, m := range meta {
-			seats = append(seats, &Seat{Address: common.HexToAddress(m.Address)})
-		}
-		var verified map[common.Address]bool
-		verified, err = r.chain.VerifyDelegation(ctx, seats, cfg.Impl, nil)
-		if err == nil {
-			status = make(map[string]bool, len(verified))
-			for address, delegated := range verified {
-				status[strings.ToLower(address.Hex())] = delegated
-			}
-		}
-	}
-	r.st.Set(func(v *View) {
-		v.Delegations = status
-		v.DelegationError = ""
-		if err != nil {
-			v.DelegationError = err.Error()
-		}
-		v.MasterReady = cfg != nil && status[strings.ToLower(cfg.Master.Hex())]
-	})
-	return err
-}
+type refreshMode int
 
-func (r *Runner) Refresh(ctx context.Context) (err error) {
+const (
+	refreshFull refreshMode = iota
+	refreshIdle
+	refreshBalancesOnly
+)
+
+func (r *Runner) Refresh(ctx context.Context) error { return r.refresh(ctx, refreshFull) }
+
+func (r *Runner) refresh(ctx context.Context, mode refreshMode) (err error) {
+	r.refreshMu.Lock()
+	defer r.refreshMu.Unlock()
+	balancesPublished := false
 	defer func() {
-		if err != nil {
+		if err != nil && !balancesPublished && !errors.Is(err, context.Canceled) {
 			r.st.Set(func(v *View) { v.BalanceError = err.Error() })
 		}
 	}()
-	sq := r.Squad()
-	if sq == nil {
+	sq, cfg, master := r.Squad(), r.Config(), r.ks.Master()
+	if sq == nil || cfg == nil || master == nil {
 		return nil
 	}
-	if n, err := r.chain.BlockNumber(ctx); err == nil {
-		r.st.Set(func(v *View) { v.Block = n })
-	}
-
-	master := r.ks.Master()
-	if master == nil {
-		return nil
-	}
-	if err := r.refreshDelegations(ctx); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-	cfg := r.Config()
-	if cfg == nil || !r.st.Snapshot().MasterReady {
-		r.st.Set(func(v *View) {
-			v.MasterReady = false
-			v.Overview = nil
-			v.Rows = nil
-		})
-		return nil
-	}
-
-	ov, err := sq.Overview(ctx)
+	head, err := r.chain.header(ctx, nil)
 	if err != nil {
 		return err
 	}
-	onChain, err := sq.Members(ctx)
+	prev := r.st.Snapshot()
+	seats := r.ks.Meta()
+	seatsChanged := !slices.Equal(seats, r.lastSeats)
+	resetDaily := r.lastHead == nil || beijingDay(r.lastHead.Time) != beijingDay(head.Time)
+	full := mode == refreshFull || (mode == refreshIdle && (seatsChanged || resetDaily || time.Since(r.lastDetails) >= time.Minute))
+	if !seatsChanged && !resetDaily && prev.BalanceError == "" && r.lastHead.Hash() == head.Hash() && (!full || r.detailsHead == head.Hash()) {
+		return nil
+	}
+	tag := hexutil.EncodeBig(head.Number)
+	detailBlock := rpc.BlockNumberOrHashWithHash(head.Hash(), true)
+	var wallets []common.Address
+	var pages []mandatePageRequest
+	var extra []rpc.BatchElem
+	var canonical *types.Header
+	if full {
+		for _, seat := range seats {
+			wallets = append(wallets, common.HexToAddress(seat.Address))
+		}
+		pages = mandatePages(wallets, true, prev.Mandates)
+		extra, err = sq.mandateBatch(detailBlock, pages)
+		if err != nil {
+			return err
+		}
+		if first := sq.daily.first; first != nil && beijingDay(first.Time) == beijingDay(head.Time) {
+			extra = append(extra, rpc.BatchElem{Method: "eth_getBlockByNumber", Args: []any{hexutil.EncodeBig(first.Number), false}, Result: &canonical})
+		}
+	}
+	live, err := sq.dashboardAt(ctx, tag, seats, prev, full, extra)
 	if err != nil {
+		if ctx.Err() == context.Canceled {
+			return ctx.Err()
+		}
+		if live.delegations == nil {
+			r.st.Set(func(v *View) {
+				v.Delegations = nil
+				v.DelegationError = err.Error()
+				v.MasterReady = false
+			})
+			r.lastDetails = time.Time{}
+			r.detailsHead = common.Hash{}
+		}
 		return err
 	}
-
-	onChain = r.ks.localRoster(onChain)
-
-	labels := map[common.Address]string{}
-	for _, s := range r.ks.Seats() {
-		labels[s.Address] = s.Label
+	old := make(map[common.Address]*Pulse, len(prev.Rows))
+	for _, row := range prev.Rows {
+		old[row.Who] = row
 	}
-
-	ps, errs := sq.PulseBatch(ctx, onChain)
-	rows := make([]*Pulse, 0, len(onChain))
-	for i, a := range onChain {
-		if errs[i] != nil {
-
-			return fmt.Errorf("读取 %s 状态失败，本次结果不完整：%w", short(a), errs[i])
+	for _, row := range live.rows {
+		if previous := old[row.Who]; previous != nil {
+			row.Championships = previous.Championships
+			if !resetDaily {
+				row.TodayWins = previous.TodayWins
+			}
 		}
-		ps[i].Label = labels[a]
-		rows = append(rows, ps[i])
 	}
-	countWho := append([]common.Address{}, onChain...)
-	if !slices.Contains(countWho, master.Address) {
-		countWho = append(countWho, master.Address)
-	}
-	countCtx, countCancel := context.WithTimeout(ctx, 8*time.Second)
-	counts, countErr := sq.ChampionshipCounts(countCtx, cfg.Arena, countWho)
-	countCancel()
-	var masterChampionships *string
-	if countErr == nil {
-		for _, row := range rows {
-			n := strconv.FormatUint(counts[row.Who], 10)
-			row.Championships = &n
-		}
-		n := strconv.FormatUint(counts[master.Address], 10)
-		masterChampionships = &n
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	r.st.Set(func(v *View) {
-		v.MasterChampionships = masterChampionships
-		v.ChampionshipsError = ""
-		if countErr != nil {
-			v.ChampionshipsError = countErr.Error()
-		}
-		v.MasterReady = true
-		v.Overview = ov
-		v.Rows = rows
+		v.Block = head.Number.Uint64()
+		v.MasterReady = live.masterReady
+		v.Delegations = live.delegations
+		v.DelegationError = ""
+		v.Overview = live.overview
+		v.Rows = live.rows
 		v.BalancesUpdated = time.Now().Format("15:04:05")
 		v.BalanceError = ""
 		v.GasPrice = r.chain.GasPrice().String()
+		if resetDaily {
+			v.TodayWins = nil
+		}
+	})
+	r.lastHead = head
+	r.lastSeats = seats
+	if seatsChanged {
+		r.detailsHead = common.Hash{}
+		r.lastDetails = time.Time{}
+	}
+	balancesPublished = true
+	if !full {
+		return nil
+	}
+	mandates, counts, mandateErr := sq.finishMandates(ctx, detailBlock, pages, extra[:len(pages)], true)
+	if mandates != nil {
+		mandates.Revision = crypto.Keccak256Hash(head.Hash().Bytes(), sq.impl.Bytes(), master.Address.Bytes())
+	}
+	results, dailyErr := sq.dailyWins(ctx, head, cfg.Arena, wallets, counts, canonical)
+	var today *uint64
+	if dailyErr == nil {
+		var total uint64
+		for _, addr := range wallets {
+			total += results[addr]
+		}
+		today = &total
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	r.lastDetails = time.Now()
+	r.detailsHead = common.Hash{}
+	if mandateErr == nil && mandates != nil && mandates.RewardError == "" && dailyErr == nil {
+		r.detailsHead = head.Hash()
+	}
+	// Snapshots already served to the frontend may still reference live.rows.
+	rows := make([]*Pulse, len(live.rows))
+	for i, base := range live.rows {
+		row := *base
+		row.Championships = nil
+		row.TodayWins = nil
+		if wins, ok := counts[row.Who]; ok {
+			n := strconv.FormatUint(wins, 10)
+			row.Championships = &n
+		}
+		if n, ok := results[row.Who]; ok {
+			row.TodayWins = &n
+		}
+		rows[i] = &row
+	}
+	r.st.Set(func(v *View) {
+		v.DetailsUpdated = r.lastDetails.Format("15:04:05")
+		v.TodayWins = today
+		v.TodayError = ""
+		if dailyErr != nil {
+			v.TodayError = dailyErr.Error()
+		}
+		v.Mandates = mandates
+		v.MandateError = ""
+		if mandateErr != nil {
+			v.MandateError = mandateErr.Error()
+		}
+
+		v.MasterChampionships = nil
+		if wins, ok := counts[master.Address]; ok {
+			n := strconv.FormatUint(wins, 10)
+			v.MasterChampionships = &n
+		}
+		v.ChampionshipsError = ""
+		if mandateErr != nil && len(counts) < len(wallets) {
+			v.ChampionshipsError = mandateErr.Error()
+		}
+		v.Rows = rows
 	})
 	return nil
 }
@@ -298,8 +379,8 @@ func (r *Runner) HarvestOne(ctx context.Context, who common.Address) error {
 }
 
 func (r *Runner) Delegate(ctx context.Context, who []common.Address) error {
-	if err := r.verifyAttached(ctx); err != nil {
-		return err
+	if len(who) == 0 {
+		return fmt.Errorf("请选择要委托的账号")
 	}
 	_, master, err := r.ready()
 	if err != nil {
@@ -340,6 +421,9 @@ func (r *Runner) Delegate(ctx context.Context, who []common.Address) error {
 	r.st.Logf("", "委托 %d 个未完成账号到 %s（主号未委托时会一并处理）",
 		todo, short(cfg.Impl))
 
+	if err := verifyDelegationTarget(ctx, delegationRPCs, r.chain.chainID, cfg, plan.Target, master.Address); err != nil {
+		return fmt.Errorf("委托目标未通过双节点核验，本次未签名：%w", err)
+	}
 	hash, err := r.chain.Delegate(ctx, master, seats, plan)
 	if err != nil {
 		return err
@@ -511,14 +595,18 @@ func (r *Runner) pollEvery(ctx context.Context, d time.Duration) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			if r.ks.Locked() || r.Squad() == nil || r.st.Busy() != "" {
+			if r.ks.Locked() || r.Squad() == nil {
 				continue
 			}
-			rctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-			if err := r.Refresh(rctx); err != nil && ctx.Err() == nil {
+			rctx, finish := r.st.beginIdleRead(ctx)
+			if finish == nil {
+				continue
+			}
+			err := r.refresh(rctx, refreshIdle)
+			finish()
+			if err != nil && !errors.Is(err, context.Canceled) && ctx.Err() == nil {
 				r.st.Logf("bad", "刷新失败: %v", err)
 			}
-			cancel()
 		}
 	}
 }

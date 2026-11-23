@@ -684,6 +684,9 @@ td.pk {
 .roster-table th:nth-child(2) {
   width: 210px;
 }
+.roster-table th.championships {
+  width: 10em;
+}
 .roster-table td.championships {
   color: var(--jade);
   font-weight: 800;
@@ -847,7 +850,8 @@ dialog {
   .wrap .roster-table td:nth-child(3),
   .wrap .roster-table td:nth-child(5),
   .wrap .roster-table td:nth-child(7),
-  .wrap .roster-table td:nth-child(9) {
+  .wrap .roster-table td:nth-child(9),
+  .wrap .roster-table td:nth-child(11) {
     grid-column: 2;
   }
   .wrap .roster-table td:nth-child(4),
@@ -1165,13 +1169,8 @@ button.copy-address:focus-visible {
   left: -9999px;
 }
 #seatWrap th:first-child,
-#seatWrap th:nth-child(5) {
+#seatWrap th.mentor {
   width: 28%;
-}
-#seatWrap th:nth-child(2),
-#seatWrap th:nth-child(3),
-#seatWrap th:nth-child(4) {
-  width: 10%;
 }
 #seatWrap th:last-child {
   width: 14%;

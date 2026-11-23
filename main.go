@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"golang.org/x/term"
 )
 
 var noOpen bool
@@ -50,11 +52,7 @@ func main() {
 	}
 	defer releaseSystem()
 
-	rpcs := []string{
-		"https://rpc.anubispace.org",
-		"https://rpc1.anubispace.org",
-		"https://rpc2.anubispace.org",
-	}
+	rpcs := delegationRPCs[:]
 	if *rpc != "" {
 		rpcs = append([]string{*rpc}, rpcs...)
 	}
@@ -104,15 +102,16 @@ func main() {
 	log.Printf("  密钥文件  %s%s", *keyfile, existsNote(ks.Exists()))
 	log.Printf("  环境      %s · chainId %d", Mainnet.Label, mainnetChainID)
 	url := "http://" + ln.Addr().String() + "/?t=" + srv.Token()
-	log.Printf("  用这个地址打开页面：")
-	log.Printf("    %s", url)
+	if noOpen || term.IsTerminal(int(os.Stderr.Fd())) {
+		log.Printf("  分享启动日志或截图前，请遮住完整登录链接（含访问令牌）：\n    %s", url)
+	}
 	if !noOpen {
 		go openBrowser(url)
 	}
 
 	srv.startContract = *contract
 
-	go run.pollEvery(ctx, time.Second)
+	go run.pollEvery(ctx, 10*time.Second)
 	go ks.AutoLockLoop(ctx, func(d time.Duration) {
 		st.Logf("warn", "空闲 %s，已自动上锁 —— 私钥已从内存清除", d.Round(time.Minute))
 	}, func() func() {
